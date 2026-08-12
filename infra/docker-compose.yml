@@ -1,0 +1,46 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: hvn-mongodb
+    restart: unless-stopped
+
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+
+    volumes:
+      - hvn_mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+
+  backend:
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile
+    container_name: hvn-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${BACKEND_PORT:-3000}
+      HOST: ${HOST:-0.0.0.0}
+      MONGO_URI: ${MONGO_URI}
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile
+    container_name: hvn-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3030}:3030"
+    depends_on:
+      - backend
+
+volumes:
+  hvn_mongodb_data:

@@ -1,0 +1,20 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "HVN Backend Server",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "PORT=3000 node --env-file-if-exists=.env.prod src/server.js",
+    "start:prod": "NODE_ENV=production PORT=3000 node --env-file-if-exists=.env.prod src/server.js",
+    "dev": "PORT=3000 node --env-file-if-exists=.env.default --env-file-if-exists=.env.dev --watch src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.1"
+  }
+}

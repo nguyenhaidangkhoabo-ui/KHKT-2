@@ -506,8 +506,9 @@ print(
 print("========================================");
 print("MOCK LOGIN");
 print("========================================");
-print("Student : hs0001 / Password@123");
-print("Teacher : gv001  / Password@123");
-print("BGH     : hoangminhduc / Password@123");
-print("Admin   : nguyenhoamai / Password@123");
+print("Student     : hs0001 / rootpassword");
+print("Teacher     : tranthibinh / rootpassword");
+print("BGH         : hoangminhduc / rootpassword");
+print("Admin       : nguyenhoamai / rootpassword");
+print("System Admin: ADMIN / rootpassword");
 print("========================================");

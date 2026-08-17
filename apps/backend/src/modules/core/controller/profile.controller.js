@@ -1,20 +1,12 @@
-import * as profileService from '../services/profile.service.js';
-import { AppError, HttpStatus, ErrorCode } from '../../../core/error.js';
+import { ProfileService } from '../services/profile.service.js';
 
-export const me = async (req, res, next) => {
-  try {
-    const payload = req.access_token_payload;
-
-    if (!payload?.uid || !payload?.role) {
-      throw new AppError('Unauthenticated', HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHENTICATED);
+export class ProfileController {
+  static async getMyProfile(req, res) {
+    try {
+      const profile = await ProfileService.getProfile(req.user.sub, req.user.is_staff);
+      return res.status(200).json({ data: profile });
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
     }
-
-    const user = await profileService.getProfile(payload.uid, payload.role);
-
-    res.status(HttpStatus.OK).json({ status: 'success', data: { user } });
-  } catch (err) {
-    next(err);
   }
-};
-
-export default { me };
+}

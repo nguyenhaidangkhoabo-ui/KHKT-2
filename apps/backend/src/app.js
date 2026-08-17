@@ -4,6 +4,8 @@ import { HttpStatus, ErrorCode } from './core/error.js';
 import { middlewares } from './core/middleware/index.js';
 import authRouter from './modules/core/routes/auth.routes.js';
 import profileRouter from './modules/core/routes/profile.routes.js';
+import academicYearRouter from './modules/core/routes/academic-year.routes.js';
+import studentRouter from './modules/core/routes/student.routes.js';
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.get('/health', (req, res) => {
 // MODULES
 app.use('/api/auth', authRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/academic-years', academicYearRouter);
+app.use('/api/students', studentRouter);
 
 // ERRORS
 app.use((req, res, next) => {

@@ -1,27 +1,15 @@
 import mongoose from 'mongoose';
-import { GradeType } from '../enums.js';
+import { Grade } from '../enums.js';
 
-const { Schema } = mongoose;
-
-const ClassSchema = new Schema(
+const classSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    grade: {
-      type: String,
-      enum: Object.values(GradeType),
-      required: true,
-    },
+    name: { type: String, required: true, unique: true, trim: true },
+    grade: { type: String, enum: Object.values(Grade), required: true }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+    collection: 'classes'
   }
 );
 
-ClassSchema.index({ name: 1 }, { unique: true, name: 'uk_class_name' });
-
-export const Class = mongoose.model('Class', ClassSchema, 'classes');
+export const ClassModel = mongoose.model('Class', classSchema);

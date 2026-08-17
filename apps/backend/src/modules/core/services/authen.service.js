@@ -1,50 +1,52 @@
 import bcrypt from 'bcrypt';
+import { StaffAccountRepository } from '../repositories/staff-account.repository.js';
+import { StudentAccountRepository } from '../repositories/student-account.repository.js';
+import { TokenService } from './token.service.js';
 import { UserStatus } from '../enums.js';
-import * as studentAccountRepository from '../repositories/student-account.repository.js';
-import * as teacherAccountRepository from '../repositories/teacher-account.repository.js';
-import { genAccessToken } from './token.service.js';
-import { AppError, HttpStatus, ErrorCode } from '../../../core/error.js';
 
-export const ACCESS_TOKEN_COOKIE_NAME = 'access_token';
+export class AuthenService {
+  static async login(username, password) {
+    // Check in staff_accounts first
+    let user = await StaffAccountRepository.findByUsername(username);
+    let isStaff = true;
 
-const findAccountByUsername = async (username) => {
-  const student = await studentAccountRepository.findByUsername(username);
-  if (student) return student;
-  return teacherAccountRepository.findByUsername(username);
-};
+    if (!user) {
+      // If not staff, check in student_accounts
+      user = await StudentAccountRepository.findByUsername(username);
+      isStaff = false;
+    }
 
-export const login = async ({ username, password }) => {
-  const account = await findAccountByUsername(username);
+    if (!user) {
+      throw new Error('Tài khoản hoặc mật khẩu không chính xác.');
+    }
 
-  if (!account) {
-    throw new AppError('Invalid username or password', HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS);
+    if (user.status === UserStatus.DISABLED) {
+      throw new Error('Tài khoản đã bị khóa.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      throw new Error('Tài khoản hoặc mật khẩu không chính xác.');
+    }
+
+    const payload = {
+      sub: user._id,
+      username: user.username,
+      role: user.role,
+      is_staff: isStaff
+    };
+
+    const token = TokenService.generateToken(payload);
+
+    return {
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        full_name: user.full_name,
+        email: user.email
+      }
+    };
   }
-
-  const passwordMatches = await bcrypt.compare(password, account.password_hash);
-  if (!passwordMatches) {
-    throw new AppError('Invalid username or password', HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS);
-  }
-
-  if (account.status !== UserStatus.ACTIVE) {
-    throw new AppError('Account is disabled', HttpStatus.FORBIDDEN, ErrorCode.ACCOUNT_DISABLED);
-  }
-
-  const accessToken = genAccessToken({
-    uid: String(account._id),
-    role: account.role,
-  });
-
-  return {
-    accessToken,
-    user: {
-      id: String(account._id),
-      username: account.username,
-      role: account.role,
-      full_name: account.full_name,
-    },
-  };
-};
-
-export const logout = async () => ({ success: true });
-
-export default { login, logout };
+}

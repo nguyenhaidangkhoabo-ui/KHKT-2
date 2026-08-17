@@ -1,24 +1,15 @@
 import jwt from 'jsonwebtoken';
-import env from '../../../env.js';
 
-export const genAccessToken = (payload, options = {}) => {
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-core-v3';
 
-  if (!payload.uid || !payload.role) {
-    throw new Error('Missing required fields');
+export class TokenService {
+  static generateToken(payload) {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
   }
 
-  if (typeof payload.uid !== 'string' || typeof payload.role !== 'string') {
-    throw new Error('Invalid uid or role');
+  static verifyToken(token) {
+    return jwt.verify(token, JWT_SECRET);
   }
+}
 
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '1d', ...options });
-};
-
-export const verrifyAccessToken = (token) => {
-  return jwt.verify(token, env.JWT_SECRET);
-};
-
-export default {
-  genAccessToken,
-  verrifyAccessToken,
-};
+export const verrifyAccessToken = (token) => TokenService.verifyToken(token);

@@ -5,7 +5,12 @@ import { middlewares } from './core/middleware/index.js';
 import authRouter from './modules/core/routes/auth.routes.js';
 import profileRouter from './modules/core/routes/profile.routes.js';
 import academicYearRouter from './modules/core/routes/academic-year.routes.js';
+import classRouter from './modules/core/routes/class.routes.js';
+import staffRouter from './modules/core/routes/staff.routes.js';
 import studentRouter from './modules/core/routes/student.routes.js';
+import classYearRouter from './modules/core/routes/class-year.routes.js';
+import studentClassRouter from './modules/core/routes/student-class.routes.js';
+import teacherRouter from './modules/core/routes/teacher.routes.js';
 
 const app = express();
 
@@ -23,11 +28,16 @@ app.get('/health', (req, res) => {
   });
 });
 
-// MODULES
-app.use('/api/auth', authRouter);
-app.use('/api/profile', profileRouter);
-app.use('/api/academic-years', academicYearRouter);
-app.use('/api/students', studentRouter);
+// CORE MODULE — 9 routers dưới prefix /api/core/...
+app.use('/api/core/auth', authRouter);
+app.use('/api/core/profile', profileRouter);
+app.use('/api/core/years', academicYearRouter);
+app.use('/api/core/classes', classRouter);
+app.use('/api/core/staff', staffRouter);
+app.use('/api/core/students', studentRouter);
+app.use('/api/core/class-years', classYearRouter);
+app.use('/api/core/student-classes', studentClassRouter);
+app.use('/api/core/teacher', teacherRouter);
 
 // ERRORS
 app.use((req, res, next) => {

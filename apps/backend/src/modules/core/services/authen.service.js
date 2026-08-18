@@ -4,14 +4,16 @@ import { StudentAccountRepository } from '../repositories/student-account.reposi
 import { TokenService } from './token.service.js';
 import { UserStatus } from '../enums.js';
 
+export const ACCESS_TOKEN_COOKIE_NAME = 'access_token';
+
 export class AuthenService {
   static async login(username, password) {
-    // Check in staff_accounts first
+    // Check trong staff_accounts trước
     let user = await StaffAccountRepository.findByUsername(username);
     let isStaff = true;
 
     if (!user) {
-      // If not staff, check in student_accounts
+      // Nếu không phải staff, check trong student_accounts
       user = await StudentAccountRepository.findByUsername(username);
       isStaff = false;
     }
@@ -39,7 +41,7 @@ export class AuthenService {
     const token = TokenService.generateToken(payload);
 
     return {
-      token,
+      accessToken: token,
       user: {
         id: user._id,
         username: user.username,
@@ -48,5 +50,10 @@ export class AuthenService {
         email: user.email
       }
     };
+  }
+
+  static async logout() {
+    // JWT stateless: chỉ cần xóa cookie phía client
+    return true;
   }
 }

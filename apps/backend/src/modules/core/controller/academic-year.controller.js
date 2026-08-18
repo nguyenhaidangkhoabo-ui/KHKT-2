@@ -1,31 +1,58 @@
-import { AcademicYearRepository } from '../repositories/academic-year.repository.js';
 import { AcademicYearService } from '../services/academic-year.service.js';
 import { validateAcademicYearInput } from '../dto/academic-year.dto.js';
+import { AppError, HttpStatus, ErrorCode } from '../../../core/error.js';
 
 export class AcademicYearController {
-  static async getAll(req, res) {
-    const list = await AcademicYearRepository.findAll();
-    return res.status(200).json({ data: list });
+  static async getAll(req, res, next) {
+    try {
+      const list = await AcademicYearService.getAll();
+      return res.status(HttpStatus.OK).json({ success: true, data: list });
+    } catch (err) { next(err); }
   }
 
-  static async create(req, res) {
+  static async getById(req, res, next) {
+    try {
+      const year = await AcademicYearService.getById(req.params.id);
+      return res.status(HttpStatus.OK).json({ success: true, data: year });
+    } catch (err) { next(err); }
+  }
+
+  static async getCurrent(req, res, next) {
+    try {
+      const year = await AcademicYearService.getCurrent();
+      return res.status(HttpStatus.OK).json({ success: true, data: year });
+    } catch (err) { next(err); }
+  }
+
+  static async create(req, res, next) {
     try {
       const validation = validateAcademicYearInput(req.body);
-      if (!validation.isValid) return res.status(400).json({ errors: validation.errors });
-
-      const created = await AcademicYearRepository.create(req.body);
-      return res.status(201).json({ data: created });
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
-    }
+      if (!validation.isValid) {
+        throw new AppError(validation.errors.join(' '), HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
+      }
+      const created = await AcademicYearService.create(req.body);
+      return res.status(HttpStatus.CREATED).json({ success: true, data: created });
+    } catch (err) { next(err); }
   }
 
-  static async setCurrent(req, res) {
+  static async update(req, res, next) {
+    try {
+      const updated = await AcademicYearService.update(req.params.id, req.body);
+      return res.status(HttpStatus.OK).json({ success: true, data: updated });
+    } catch (err) { next(err); }
+  }
+
+  static async delete(req, res, next) {
+    try {
+      await AcademicYearService.delete(req.params.id);
+      return res.status(HttpStatus.OK).json({ success: true, message: 'Xóa năm học thành công' });
+    } catch (err) { next(err); }
+  }
+
+  static async setCurrent(req, res, next) {
     try {
       const updated = await AcademicYearService.setCurrentAcademicYear(req.params.id);
-      return res.status(200).json({ message: 'Cập nhật năm học hiện tại thành công', data: updated });
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
-    }
+      return res.status(HttpStatus.OK).json({ success: true, message: 'Cập nhật năm học hiện tại thành công', data: updated });
+    } catch (err) { next(err); }
   }
 }

@@ -4,5 +4,6 @@ import { authenticate } from '../services/author.service.js';
 
 const router = Router();
 router.get('/me', authenticate, ProfileController.getMyProfile);
+router.patch('/password', authenticate, ProfileController.changePassword);
 
 export default router;

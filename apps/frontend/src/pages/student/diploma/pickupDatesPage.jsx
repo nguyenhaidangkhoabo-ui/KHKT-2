@@ -1,46 +1,40 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useFetch } from '../../../hooks/useFetch'
 import { studentDiplomaService } from '../../../services/studentDiploma.service'
-import { formatDate } from '../../../utils/formatDate'
+import Card from '../../../components/ui/card'
+import Badge from '../../../components/ui/badge'
 import Spinner from '../../../components/ui/spinner'
-import Button from '../../../components/ui/button'
-import Table from '../../../components/ui/table'
 import Alert from '../../../components/feedback/alert'
+import EmptyState from '../../../components/feedback/emptyState'
+import { formatDate, formatDateShort } from '../../../utils/formatDate'
 
 export default function PickupDatesPage() {
-  const [dates, setDates] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const { data: dates, loading, error } = useFetch(() => studentDiplomaService.getAvailableDates(), [])
 
-  useEffect(() => {
-    studentDiplomaService.getAvailableDates()
-      .then((data) => setDates(data.dates || data || []))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
-
-  const columns = [
-    { key: 'date', title: 'Ngày', render: (r) => formatDate(r.date, true) },
-    { key: 'slot', title: 'Ca nhận', render: (r) => r.slot || '—' },
-    { key: 'remaining', title: 'Còn chỗ', render: (r) => r.remaining ?? '—' },
-    {
-      key: 'action', title: 'Thao tác',
-      render: (r) => (
-        <Button size="sm" onClick={() => navigate('/student/diploma/pickup', { state: { dateId: r.id } })}>
-          Đăng ký
-        </Button>
-      ),
-    },
-  ]
-
-  if (loading) return <div className="text-center mt-8"><Spinner /></div>
-  if (error) return <Alert type="error">{error}</Alert>
+  if (loading) return <div className="text-center py-6"><Spinner size="lg" /></div>
+  if (error) return <Alert type="warning">{error.message} — Chờ module Diploma (Phụ lục A).</Alert>
+  if (!dates?.length) return <EmptyState text="Chưa có lịch nhận bằng" icon="calendarDays" />
 
   return (
-    <div className="container">
-      <h1 className="page-title">Ngày nhận bằng khả dụng</h1>
-      <Table columns={columns} data={dates} emptyText="Hiện chưa có lịch nhận bằng khả dụng." />
+    <div>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Lịch nhận bằng</h2>
+          <p className="page-subtitle">Các ngày bạn có thể đến trường nhận bằng tốt nghiệp</p>
+        </div>
+      </div>
+      <div className="grid-3">
+        {dates.map((d) => (
+          <Card key={d._id} title={formatDate(d.date)} subtitle={`Ca ${d.shift_name || '—'}`}>
+            <p className="text-secondary">{d.note || 'Nhận bằng tại văn phòng nhà trường.'}</p>
+            <div className="mt-4">
+              <Badge variant={d.remaining_slots > 0 ? 'success' : 'danger'}>
+                {d.remaining_slots > 0 ? `Còn ${d.remaining_slots} chỗ` : 'Hết chỗ'}
+              </Badge>
+              <span className="text-muted" style={{ marginLeft: 8 }}>{formatDateShort(d.date)}</span>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

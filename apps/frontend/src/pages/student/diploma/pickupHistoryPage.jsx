@@ -1,56 +1,81 @@
-import { useEffect, useState } from 'react'
+import { useFetch } from '../../../hooks/useFetch'
 import { studentDiplomaService } from '../../../services/studentDiploma.service'
-import { formatDate } from '../../../utils/formatDate'
-import Spinner from '../../../components/ui/spinner'
-import Table from '../../../components/ui/table'
+import Card from '../../../components/ui/card'
 import Badge from '../../../components/ui/badge'
 import Button from '../../../components/ui/button'
+import Spinner from '../../../components/ui/spinner'
 import Alert from '../../../components/feedback/alert'
+import EmptyState from '../../../components/feedback/emptyState'
+import ConfirmDialog from '../../../components/feedback/confirmDialog'
+import { useState } from 'react'
+import { useNotification } from '../../../hooks/useNotification'
+import { formatDate } from '../../../utils/formatDate'
+import { REGISTRATION_STATUS_LABELS } from '../../../config/constants'
+
+const BADGE_COLOR = { PENDING: 'warning', CONFIRMED: 'info', COMPLETED: 'success', CANCELLED: 'secondary' }
 
 export default function PickupHistoryPage() {
-  const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [cancelId, setCancelId] = useState(null)
+  const { toast } = useNotification()
+  const { data: history, loading, error, refetch } = useFetch(
+    () => studentDiplomaService.getHistory(),
+    []
+  )
 
-  const loadHistory = () => {
-    setLoading(true)
-    studentDiplomaService.getHistory()
-      .then((data) => setHistory(data.registrations || data || []))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(loadHistory, [])
-
-  const handleCancel = async (id) => {
-    if (!window.confirm('Hủy đăng ký nhận bằng này?')) return
+  const handleCancel = async () => {
     try {
-      await studentDiplomaService.cancelRegistration(id)
-      loadHistory()
+      await studentDiplomaService.cancelRegistration(cancelId)
+      toast.success('Đã hủy đăng ký')
+      setCancelId(null)
+      refetch()
     } catch (e) {
-      setError(e.message)
+      toast.error(e.message)
     }
   }
 
-  const columns = [
-    { key: 'date', title: 'Ngày nhận', render: (r) => formatDate(r.date, true) },
-    { key: 'status', title: 'Trạng thái', render: (r) => <Badge status={r.status} /> },
-    {
-      key: 'action', title: 'Thao tác',
-      render: (r) =>
-        r.status === 'REGISTERED' ? (
-          <Button variant="danger" size="sm" onClick={() => handleCancel(r.id)}>Hủy</Button>
-        ) : '—',
-    },
-  ]
-
-  if (loading) return <div className="text-center mt-8"><Spinner /></div>
-  if (error) return <Alert type="error">{error}</Alert>
+  if (loading) return <div className="text-center py-6"><Spinner size="lg" /></div>
+  if (error) return <Alert type="warning">{error.message} — Chờ module Diploma (Phụ lục A).</Alert>
+  if (!history?.length) return <EmptyState text="Bạn chưa đăng ký nhận bằng nào" icon="clipboard" />
 
   return (
-    <div className="container">
-      <h1 className="page-title">Lịch sử đăng ký nhận bằng</h1>
-      <Table columns={columns} data={history} emptyText="Chưa có lịch sử đăng ký." />
+    <div>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Lịch sử đăng ký</h2>
+          <p className="page-subtitle">Theo dõi trạng thái các lần đăng ký nhận bằng</p>
+        </div>
+      </div>
+      <div className="grid-2">
+        {history.map((r) => (
+          <Card key={r._id}>
+            <div className="flex-between">
+              <div>
+                <div style={{ fontWeight: 700 }}>{formatDate(r.schedule_date?.date, true)}</div>
+                <div className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>
+                  {r.schedule_date?.shift_name || ''}
+                </div>
+              </div>
+              <Badge variant={BADGE_COLOR[r.status] || 'secondary'}>
+                {REGISTRATION_STATUS_LABELS[r.status] || r.status}
+              </Badge>
+            </div>
+            {r.status === 'PENDING' && (
+              <div className="mt-4">
+                <Button variant="danger" size="sm" onClick={() => setCancelId(r._id)}>Hủy đăng ký</Button>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+      <ConfirmDialog
+        open={!!cancelId}
+        title="Hủy đăng ký"
+        message="Bạn có chắc chắn muốn hủy đăng ký nhận bằng này?"
+        confirmText="Hủy đăng ký"
+        variant="danger"
+        onConfirm={handleCancel}
+        onCancel={() => setCancelId(null)}
+      />
     </div>
   )
 }

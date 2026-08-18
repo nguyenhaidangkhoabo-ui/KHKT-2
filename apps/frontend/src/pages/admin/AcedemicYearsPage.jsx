@@ -1,100 +1,94 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useFetch } from '../../hooks/useFetch'
 import { adminCoreService } from '../../services/adminCore.service'
-import Spinner from '../../components/ui/spinner'
-import Table from '../../components/ui/table'
+import Card from '../../components/ui/card'
+import Badge from '../../components/ui/badge'
 import Button from '../../components/ui/button'
-import Modal from '../../components/ui/modal'
 import Input from '../../components/ui/input'
+import Modal from '../../components/ui/modal'
+import Table from '../../components/ui/table'
+import ConfirmDialog from '../../components/feedback/confirmDialog'
 import Alert from '../../components/feedback/alert'
 import { useNotification } from '../../hooks/useNotification'
+import { formatAcademicYear } from '../../utils/formatDate'
 
 export default function AcedemicYearsPage() {
-  const [years, setYears] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [openModal, setOpenModal] = useState(false)
-  const [newName, setNewName] = useState('')
+  const [openCreate, setOpenCreate] = useState(false)
+  const [startYear, setStartYear] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [saving, setSaving] = useState(false)
   const { toast } = useNotification()
 
-  const loadYears = () => {
-    setLoading(true)
-    adminCoreService.getYears()
-      .then((data) => setYears(data.years || data || []))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(loadYears, [])
+  const { data: years, loading, error, refetch } = useFetch(() => adminCoreService.getYears(), [])
 
   const handleCreate = async () => {
-    if (!newName.trim()) return
+    const start = Number(startYear)
+    if (!start) return toast.error('Vui lòng nhập năm bắt đầu')
+    setSaving(true)
     try {
-      await adminCoreService.createYear({ name: newName.trim() })
+      await adminCoreService.createYear({ start_year: start, end_year: start + 1 })
       toast.success('Tạo năm học thành công')
-      setNewName('')
-      setOpenModal(false)
-      loadYears()
-    } catch (e) {
-      setError(e.message)
-    }
+      setOpenCreate(false)
+      setStartYear('')
+      refetch()
+    } catch (e) { toast.error(e.message) } finally { setSaving(false) }
   }
 
-  const handleMakeCurrent = async (id) => {
+  const handleSetCurrent = async (id) => {
     try {
-      await adminCoreService.makeCurrentYear(id)
+      await adminCoreService.setCurrentYear(id)
       toast.success('Đã chọn năm học hiện tại')
-      loadYears()
-    } catch (e) {
-      setError(e.message)
-    }
+      refetch()
+    } catch (e) { toast.error(e.message) }
+  }
+
+  const handleDelete = async () => {
+    setSaving(true)
+    try {
+      await adminCoreService.deleteYear(confirmDelete)
+      toast.success('Xóa năm học thành công')
+      setConfirmDelete(null)
+      refetch()
+    } catch (e) { toast.error(e.message) } finally { setSaving(false) }
   }
 
   const columns = [
-    { key: 'name', title: 'Năm học' },
-    {
-      key: 'is_current', title: 'Hiện tại',
-      render: (r) => (r.is_current ? '✅' : '—'),
-    },
-    {
-      key: 'action', title: 'Thao tác',
-      render: (r) =>
-        !r.is_current && (
-          <Button variant="outline" size="sm" onClick={() => handleMakeCurrent(r.id)}>
-            Chọn làm năm hiện tại
-          </Button>
-        ),
-    },
+    { key: 'range', label: 'Năm học', render: (r) => <strong>{r.start_year} - {r.end_year}</strong> },
+    { key: 'is_current', label: 'Trạng thái', render: (r) => r.is_current ? <Badge variant="success">Năm hiện tại</Badge> : <Badge variant="secondary">Chưa kích hoạt</Badge> },
+    { key: 'actions', label: 'Thao tác', align: 'right', render: (r) => (
+      <div className="flex gap-2" style={{ justifyContent: 'flex-end' }}>
+        {!r.is_current && <Button size="sm" onClick={() => handleSetCurrent(r._id)}>Đặt là năm hiện tại</Button>}
+        <Button size="sm" variant="danger" onClick={() => setConfirmDelete(r._id)}>Xóa</Button>
+      </div>
+    ) },
   ]
 
-  if (loading) return <div className="text-center mt-8"><Spinner /></div>
-  if (error) return <Alert type="error">{error}</Alert>
-
   return (
-    <div className="container">
-      <div className="flex-between mb-4">
-        <h1 className="page-title">Quản lý năm học</h1>
-        <Button onClick={() => setOpenModal(true)}>+ Thêm năm học</Button>
+    <div>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Quản lý năm học</h2>
+          <p className="page-subtitle">Mỗi năm học: end_year = start_year + 1; chỉ 1 năm được kích hoạt</p>
+        </div>
+        <div className="page-actions">
+          <Button onClick={() => setOpenCreate(true)}>+ Thêm năm học</Button>
+        </div>
       </div>
-      <Table columns={columns} data={years} emptyText="Chưa có năm học nào." />
 
-      <Modal
-        open={openModal}
-        title="Thêm năm học"
-        onClose={() => setOpenModal(false)}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setOpenModal(false)}>Hủy</Button>
-            <Button onClick={handleCreate}>Lưu</Button>
-          </>
-        }
-      >
-        <Input
-          label="Tên năm học"
-          placeholder="VD: 2025-2026"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
+      {error && <Alert type="error">{error.message}</Alert>}
+      <Card>
+        <Table columns={columns} data={years || []} loading={loading} emptyText="Chưa có năm học nào" />
+      </Card>
+
+      <Modal open={openCreate} title="Thêm năm học" onClose={() => setOpenCreate(false)}
+        footer={<><Button variant="ghost" onClick={() => setOpenCreate(false)}>Hủy</Button><Button onClick={handleCreate} loading={saving}>Tạo</Button></>}>
+        <Input label="Năm bắt đầu" type="number" placeholder="VD: 2026"
+          value={startYear} onChange={(e) => setStartYear(e.target.value)} hint={`Năm học sẽ là ${startYear} - ${Number(startYear) + 1 || ''}`} />
       </Modal>
+
+      <ConfirmDialog open={!!confirmDelete} title="Xóa năm học" variant="danger"
+        message="Năm học đang có lớp tham chiếu sẽ không xóa được. Tiếp tục?"
+        confirmText="Xóa" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} loading={saving} />
     </div>
   )
 }

@@ -1,35 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useFetch } from '../../../hooks/useFetch'
 import { teacherService } from '../../../services/teacher.service'
-import Spinner from '../../../components/ui/spinner'
-import Table from '../../../components/ui/table'
+import Card from '../../../components/ui/card'
 import Badge from '../../../components/ui/badge'
+import Table from '../../../components/ui/table'
+import Spinner from '../../../components/ui/spinner'
 import Alert from '../../../components/feedback/alert'
+import { DIPLOMA_STATUS_LABELS, DIPLOMA_STATUS_COLORS } from '../../../config/constants'
 
 export default function ClassDiplomasPage() {
-  const [diplomas, setDiplomas] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const { data, loading, error } = useFetch(() => teacherService.getMyClassDiplomas(), [])
 
-  useEffect(() => {
-    teacherService.getMyClassDiplomas()
-      .then((data) => setDiplomas(data.diplomas || data || []))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
+  if (loading) return <div className="text-center py-6"><Spinner size="lg" /></div>
+  if (error) {
+    return <Alert type="warning">{error.message} — Tính năng cần module Diploma (Phụ lục A).</Alert>
+  }
 
+  const rows = data?.diplomas || data || []
   const columns = [
-    { key: 'student_name', title: 'Học sinh' },
-    { key: 'diploma_number', title: 'Số hiệu bằng' },
-    { key: 'status', title: 'Trạng thái', render: (r) => <Badge status={r.status} /> },
+    { key: 'student_code', label: 'Mã HS', render: (r) => <strong>{r.student_code}</strong> },
+    { key: 'student_name', label: 'Họ tên' },
+    { key: 'diploma_number', label: 'Số hiệu bằng' },
+    { key: 'status', label: 'Trạng thái', render: (r) => (
+      <Badge variant={DIPLOMA_STATUS_COLORS[r.status] || 'secondary'}>{DIPLOMA_STATUS_LABELS[r.status] || r.status}</Badge>
+    ) },
   ]
 
-  if (loading) return <div className="text-center mt-8"><Spinner /></div>
-  if (error) return <Alert type="error">{error}</Alert>
-
   return (
-    <div className="container">
-      <h1 className="page-title">Bằng tốt nghiệp lớp chủ nhiệm</h1>
-      <Table columns={columns} data={diplomas} emptyText="Không có dữ liệu." />
+    <div>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Bằng tốt nghiệp của lớp</h2>
+          <p className="page-subtitle">Trạng thái bằng của học sinh lớp chủ nhiệm</p>
+        </div>
+      </div>
+      <Card>
+        <Table columns={columns} data={rows} emptyText="Chưa có dữ liệu bằng" />
+      </Card>
     </div>
   )
 }

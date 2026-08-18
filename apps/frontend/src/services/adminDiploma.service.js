@@ -1,3 +1,4 @@
+// Module Diploma — endpoint theo Phụ lục A. Backend cần được bổ sung trước khi dùng.
 import { apiClient } from './api/apiClient'
 
 export const adminDiplomaService = {

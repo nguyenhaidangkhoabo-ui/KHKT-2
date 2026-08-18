@@ -1,39 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useFetch } from '../../../hooks/useFetch'
 import { adminScheduleService } from '../../../services/adminSchedule.service'
-import { formatDate } from '../../../utils/formatDate'
+import Card from '../../../components/ui/card'
+import Badge from '../../../components/ui/badge'
 import Spinner from '../../../components/ui/spinner'
-import Table from '../../../components/ui/table'
 import Alert from '../../../components/feedback/alert'
+import { formatDate } from '../../../utils/formatDate'
 
 export default function CurrentSchedulePage() {
-  const [week, setWeek] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const { data: week, loading, error } = useFetch(() => adminScheduleService.getCurrentWeek(), [])
 
-  useEffect(() => {
-    adminScheduleService.getCurrentWeek()
-      .then((data) => setWeek(data.week || data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
+  if (loading) return <div className="text-center py-6"><Spinner size="lg" /></div>
+  if (error) return <Alert type="warning">{error.message} — Tính năng cần module Diploma (Phụ lục A).</Alert>
 
-  if (loading) return <div className="text-center mt-8"><Spinner /></div>
-  if (error) return <Alert type="error">{error}</Alert>
-
-  const days = week?.days || []
-
-  const columns = [
-    { key: 'date', title: 'Ngày', render: (r) => formatDate(r.date) },
-    { key: 'slot', title: 'Ca', render: (r) => r.slot || '—' },
-    { key: 'capacity', title: 'Sức chứa', render: (r) => r.capacity ?? '—' },
-    { key: 'registered', title: 'Đã đăng ký', render: (r) => r.registered ?? '—' },
-  ]
+  const days = week?.days || week || []
 
   return (
-    <div className="container">
-      <h1 className="page-title">Lịch tuần hiện tại</h1>
-      {week?.label && <p className="text-secondary mb-4">{week.label}</p>}
-      <Table columns={columns} data={days} emptyText="Chưa có lịch cho tuần này." />
+    <div>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Lịch nhận bằng hiện tại</h2>
+          <p className="page-subtitle">Tuần từ {formatDate(week?.start_date)} đến {formatDate(week?.end_date)}</p>
+        </div>
+      </div>
+      <div className="grid-3">
+        {days.length === 0 && <p className="text-secondary">Chưa có lịch cho tuần này.</p>}
+        {days.map((d) => (
+          <Card key={d._id} title={formatDate(d.date, true)}
+            subtitle={d.shift_name ? `Ca: ${d.shift_name}` : ''}>
+            <Badge variant={d.is_active ? 'success' : 'secondary'}>
+              {d.is_active ? 'Nhận bằng' : 'Không nhận'}
+            </Badge>
+            <p className="mt-2 text-secondary">{d.note || ''}</p>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

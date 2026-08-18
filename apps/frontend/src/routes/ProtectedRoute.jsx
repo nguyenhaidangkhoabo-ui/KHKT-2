@@ -4,9 +4,9 @@ import Spinner from '../components/ui/spinner'
 import { HOME_BY_ROLE } from '../config/constants'
 
 export default function ProtectedRoute({ roles = [], children }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, isInitializing } = useAuth()
 
-  if (isLoading) {
+  if (isLoading || isInitializing) {
     return <div className="text-center mt-8"><Spinner size="lg" /></div>
   }
   if (!user) {

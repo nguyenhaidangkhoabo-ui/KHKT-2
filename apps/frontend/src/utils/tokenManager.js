@@ -1,8 +1,20 @@
-// Token lưu trong cookie `access_token` (httpOnly do backend set).
-// Frontend chỉ lưu thông tin user vào localStorage để hiển thị UI.
-const USER_KEY = 'hvn_user'
+import { APP_CONFIG } from '../config/app.config'
 
+const { user: USER_KEY, token: TOKEN_KEY } = APP_CONFIG.storageKeys
+
+/**
+ * Lưu JWT token + user vào localStorage.
+ * Token do backend trả trong body login (sau fix backend) —
+ * frontend gửi lại qua header Authorization: Bearer <token>.
+ */
 export const tokenManager = {
+  saveAuth(token, user) {
+    if (token) localStorage.setItem(TOKEN_KEY, token)
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
+  },
+  getToken() {
+    return localStorage.getItem(TOKEN_KEY)
+  },
   saveUser(user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
   },
@@ -14,6 +26,7 @@ export const tokenManager = {
     }
   },
   clear() {
+    localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
   },
 }

@@ -1,3 +1,3 @@
 export default function Spinner({ size = 'md' }) {
-  return <div className={`spinner spinner-${size}`} aria-label="Đang tải" />
+  return <div className={`spinner spinner-${size}`} role="status" aria-label="Đang tải..." />
 }

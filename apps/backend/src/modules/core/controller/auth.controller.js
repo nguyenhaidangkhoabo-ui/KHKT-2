@@ -18,7 +18,7 @@ export const login = async (req, res, next) => {
 
     const { accessToken, user } = await AuthenService.login(req.body.username, req.body.password);
     res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, COOKIE_OPTIONS);
-    res.status(HttpStatus.OK).json({ success: true, data: { user } });
+    res.status(HttpStatus.OK).json({ success: true, data: { token: accessToken, user } });
   } catch (err) {
     next(err);
   }

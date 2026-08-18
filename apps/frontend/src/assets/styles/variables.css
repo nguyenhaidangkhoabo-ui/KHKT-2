@@ -1,16 +1,25 @@
-/* ===== MÀU SẮC (Color Palette) ===== */
+/* =========================================================
+   DESIGN TOKENS — Cổng thông tin THPT Huỳnh Văn Nghệ
+   Phong cách: Xanh dương gradient + Dark Sidebar
+   ========================================================= */
 :root {
-  /* Primary — Xanh dương chủ đạo */
+  /* ===== Brand & Gradient ===== */
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
   --color-primary-light: #dbeafe;
   --color-primary-dark: #1e40af;
+  --color-accent: #06b6d4;
+  --color-accent-light: #cffafe;
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+  --gradient-primary-soft: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%);
 
-  /* Secondary — Xám trung tính */
-  --color-secondary: #64748b;
-  --color-secondary-light: #e2e8f0;
+  /* ===== Sidebar (Dark) ===== */
+  --sidebar-bg: #0f172a;
+  --sidebar-hover: #1e293b;
+  --sidebar-text: #94a3b8;
+  --sidebar-text-active: #ffffff;
 
-  /* Success / Warning / Danger / Info */
+  /* ===== Trạng thái ===== */
   --color-success: #16a34a;
   --color-success-light: #dcfce7;
   --color-warning: #d97706;
@@ -20,7 +29,7 @@
   --color-info: #0891b2;
   --color-info-light: #cffafe;
 
-  /* Nền & Chữ */
+  /* ===== Nền & chữ ===== */
   --color-bg: #f1f5f9;
   --color-surface: #ffffff;
   --color-border: #e2e8f0;
@@ -28,20 +37,21 @@
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
 
-  /* ===== TYPOGRAPHY ===== */
-  --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  /* ===== Typography ===== */
+  --font-family: 'Be Vietnam Pro', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-md: 16px;
   --font-size-lg: 18px;
   --font-size-xl: 22px;
   --font-size-2xl: 28px;
+  --font-size-3xl: 34px;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
-  --line-height: 1.5;
+  --line-height: 1.55;
 
-  /* ===== SPACING (8px grid) ===== */
+  /* ===== Spacing (8px grid) ===== */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -50,18 +60,18 @@
   --space-6: 32px;
   --space-8: 48px;
 
-  /* ===== RADIUS & SHADOW ===== */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* ===== Radius & Shadow ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 6px 16px -4px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 16px 32px -8px rgba(15, 23, 42, 0.18);
 
-  /* ===== LAYOUT ===== */
-  --sidebar-width: 240px;
-  --header-height: 60px;
+  /* ===== Layout ===== */
+  --sidebar-width: 264px;
+  --header-height: 68px;
   --z-header: 100;
   --z-modal: 1000;
   --z-toast: 1100;

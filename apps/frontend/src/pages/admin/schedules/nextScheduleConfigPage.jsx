@@ -54,7 +54,7 @@ export default function NextScheduleConfigPage() {
             <span className="text-secondary">{d}</span>
             <Button size="sm" variant="ghost" onClick={async () => {
               try {
-                await adminScheduleService.updateNextWeekDay(d, { is_active: true })
+                await adminScheduleService.updateNextWeekDay(d, { enable: true })
                 toast.success(`Đã bật ${d}`)
               } catch (e) { toast.error(e.message) }
             }}>Bật</Button>

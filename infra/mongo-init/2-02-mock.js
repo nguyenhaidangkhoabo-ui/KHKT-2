@@ -9,7 +9,7 @@ const database = db.getSiblingDB(dbName);
   "student_class_academic_years",
   "class_academic_years",
   "student_accounts",
-  "teacher_accounts",
+  "staff_accounts",
   "classes",
   "academic_years",
 ].forEach((collection) => {
@@ -35,7 +35,7 @@ function studentCode(index) {
   return `HS${String(index).padStart(4, "0")}`;
 }
 
-function teacherCode(index) {
+function staffCode(index) {
   return `GV${String(index).padStart(3, "0")}`;
 }
 
@@ -150,7 +150,7 @@ const classes = [
 database.classes.insertMany(classes);
 
 // ============================================================
-// C. TEACHER ACCOUNTS
+// C. STAFF ACCOUNTS
 // ============================================================
 
 const teachers = [
@@ -160,7 +160,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "SYSTEM_ADMIN",
     status: "ACTIVE",
-    teacher_code: teacherCode(1),
+    staff_code: staffCode(1),
     full_name: "Administrator",
     email: "[EMAIL_ADDRESS]",
     phone: "0000000000",
@@ -173,7 +173,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "TEACHER",
     status: "ACTIVE",
-    teacher_code: teacherCode(2),
+    staff_code: staffCode(2),
     full_name: "Trần Thị Bình",
     email: "tranthibinh@hvn.edu.vn",
     phone: "0901000002",
@@ -186,7 +186,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "TEACHER",
     status: "ACTIVE",
-    teacher_code: teacherCode(3),
+    staff_code: staffCode(3),
     full_name: "Lê Văn Cường",
     email: "levancuong@hvn.edu.vn",
     phone: "0901000003",
@@ -199,7 +199,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "TEACHER",
     status: "ACTIVE",
-    teacher_code: teacherCode(4),
+    staff_code: staffCode(4),
     full_name: "Phạm Thị Dung",
     email: "phamthidung@hvn.edu.vn",
     phone: "0901000004",
@@ -212,7 +212,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "BGH",
     status: "ACTIVE",
-    teacher_code: teacherCode(5),
+    staff_code: staffCode(5),
     full_name: "Hoàng Minh Đức",
     email: "hoangminhduc@hvn.edu.vn",
     phone: "0901000005",
@@ -225,7 +225,7 @@ const teachers = [
     password_hash: MOCK_PASSWORD_HASH,
     role: "ADMIN",
     status: "ACTIVE",
-    teacher_code: teacherCode(6),
+    staff_code: staffCode(6),
     full_name: "Nguyễn Hoài Mai",
     email: "nguyenhoamai@hvn.edu.vn",
     phone: "0901000006",
@@ -234,7 +234,7 @@ const teachers = [
   },
 ];
 
-database.teacher_accounts.insertMany(teachers);
+database.staff_accounts.insertMany(teachers);
 
 // ============================================================
 // D. STUDENT ACCOUNTS
@@ -454,13 +454,13 @@ database.classes.createIndex(
   { unique: true }
 );
 
-database.teacher_accounts.createIndex(
+database.staff_accounts.createIndex(
   { username: 1 },
   { unique: true }
 );
 
-database.teacher_accounts.createIndex(
-  { teacher_code: 1 },
+database.staff_accounts.createIndex(
+  { staff_code: 1 },
   { unique: true }
 );
 
@@ -494,7 +494,7 @@ print("========================================");
 
 print(`academic_years: ${database.academic_years.countDocuments()}`);
 print(`classes: ${database.classes.countDocuments()}`);
-print(`teacher_accounts: ${database.teacher_accounts.countDocuments()}`);
+print(`staff_accounts: ${database.staff_accounts.countDocuments()}`);
 print(`student_accounts: ${database.student_accounts.countDocuments()}`);
 print(
   `class_academic_years: ${database.class_academic_years.countDocuments()}`
@@ -512,3 +512,60 @@ print("BGH         : hoangminhduc / rootpassword");
 print("Admin       : nguyenhoamai / rootpassword");
 print("System Admin: ADMIN / rootpassword");
 print("========================================");
+
+// ===================== MODULE DIPLOMA (SEED MẪU) =====================
+
+const graduatedStudents = db.student_accounts.find({ academic_status: 'GRADUATED' }).toArray();
+const currentYear = db.academic_years.findOne({ is_current: true }) || db.academic_years.findOne();
+
+// 1. Tạo bằng tốt nghiệp cho tối đa 3 học sinh đã tốt nghiệp
+if (graduatedStudents.length > 0 && currentYear) {
+  const sampleStudents = graduatedStudents.slice(0, 3);
+  const existingDiplomas = db.diplomas.countDocuments({});
+  sampleStudents.forEach((s, i) => {
+    const hasDiploma = db.diplomas.findOne({ student_id: s._id });
+    if (!hasDiploma) {
+      db.diplomas.insertOne({
+        student_id: s._id,
+        graduation_academic_year_id: currentYear._id,
+        status: i === 0 ? 'NOT_STORED' : 'STORED',
+        diploma_number: i === 0 ? null : `HVN-${currentYear.start_year}-${String(existingDiplomas + i + 1).padStart(4, '0')}`,
+        created_at: now,
+        updated_at: now
+      });
+    }
+  });
+}
+
+// 2. Tạo lịch phát bằng tuần sau (Thứ 2 → Chủ nhật)
+const today = new Date();
+const dow = today.getDay() === 0 ? -6 : 1 - today.getDay();
+const monday = new Date(today);
+monday.setDate(today.getDate() + dow + 7);
+monday.setHours(0, 0, 0, 0);
+const sunday = new Date(monday);
+sunday.setDate(monday.getDate() + 6);
+
+const yearStart = new Date(monday.getFullYear(), 0, 1);
+const weekNumber = Math.ceil((((monday - yearStart) / 86400000) + 1) / 7);
+const yearWeek = `${monday.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+
+const hasSchedule = db.diploma_pickup_schedules.findOne({ year_week: yearWeek });
+if (!hasSchedule && currentYear) {
+  db.diploma_pickup_schedules.insertOne({
+    academic_year_id: currentYear._id,
+    year_week: yearWeek,
+    week_start_date: monday,
+    week_end_date: sunday,
+    days: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((d, idx) => ({
+      day_of_week: d,
+      enabled: idx < 5, // T2–T6 bật, T7–CN tắt
+      start_time: '07:30',
+      end_time: '17:00',
+      capacity: 100,
+      registered_count: 0
+    })),
+    created_at: now,
+    updated_at: now
+  });
+}

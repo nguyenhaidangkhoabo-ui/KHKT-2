@@ -24,7 +24,7 @@ export default function PickupDatesPage() {
       </div>
       <div className="grid-3">
         {dates.map((d) => (
-          <Card key={d._id} title={formatDate(d.date)} subtitle={`Ca ${d.shift_name || '—'}`}>
+          <Card key={d.date} title={formatDate(d.date)} subtitle={`Ca ${d.shift_name || '—'}`}>`
             <p className="text-secondary">{d.note || 'Nhận bằng tại văn phòng nhà trường.'}</p>
             <div className="mt-4">
               <Badge variant={d.remaining_slots > 0 ? 'success' : 'danger'}>

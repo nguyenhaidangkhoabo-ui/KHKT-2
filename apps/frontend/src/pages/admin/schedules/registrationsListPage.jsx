@@ -18,10 +18,10 @@ export default function RegistrationsListPage() {
     [date]
   )
 
-  const columns = [
+    const columns = [
     { key: 'student_code', label: 'Mã HS', render: (r) => <strong>{r.student_code}</strong> },
-    { key: 'student_name', label: 'Họ tên' },
-    { key: 'schedule_date', label: 'Ngày nhận', render: (r) => formatDate(r.schedule_date?.date) },
+    { key: 'full_name', label: 'Họ tên' },
+    { key: 'pickup_date', label: 'Ngày nhận', render: (r) => formatDate(r.pickup_date) },
     { key: 'status', label: 'Trạng thái', render: (r) => (
       <Badge variant={BADGE_COLOR[r.status] || 'secondary'}>{REGISTRATION_STATUS_LABELS[r.status] || r.status}</Badge>
     ) },

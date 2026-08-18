@@ -46,11 +46,11 @@ export default function PickupRegisterPage() {
         {(!dates || dates.length === 0) && <p className="text-secondary">Hiện chưa có lịch nhận bằng nào.</p>}
         <div className="grid-3">
           {dates?.map((d) => (
-            <label key={d._id} className={`card pickup-option ${selected === d._id ? 'selected' : ''}`}
+            <label key={d.date} className={`card pickup-option ${selected === d.date ? 'selected' : ''}`}
               style={{ cursor: 'pointer', padding: 'var(--space-4)' }}>
-              <input type="radio" name="pickup" value={d._id}
-                checked={selected === d._id}
-                onChange={() => setSelected(d._id)}
+              <input type="radio" name="pickup" value={d.date}
+                checked={selected === d.date}
+                onChange={() => setSelected(d.date)}
                 style={{ display: 'none' }} />
               <div style={{ fontWeight: 700 }}>{formatDate(d.date)}</div>
               <div className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>Ca {d.shift_name || '—'}</div>

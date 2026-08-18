@@ -17,7 +17,7 @@ export default function PreparationExportPage() {
     setLoading(true)
     setError('')
     try {
-      await downloadExcel(`/diploma/registrations/export?date=${date}`, `danh-sach-nhan-bang-${date}.xlsx`)
+      await downloadExcel(`/diploma/registrations/export?pickup_date=${date}`, `danh-sach-nhan-bang-${date}.xlsx`)
       toast.success('Đã tải file danh sách')
     } catch (e) {
       setError(e.message)

@@ -71,10 +71,10 @@ database.createCollection("classes", {
 
 
 // ============================================================
-// C. TEACHER ACCOUNTS
+// C. STAFF ACCOUNTS
 // ============================================================
 
-database.createCollection("teacher_accounts", {
+database.createCollection("staff_accounts", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -82,7 +82,7 @@ database.createCollection("teacher_accounts", {
         "username",
         "password_hash",
         "role",
-        "teacher_code",
+        "staff_code",
         "full_name"
       ],
       properties: {
@@ -106,7 +106,7 @@ database.createCollection("teacher_accounts", {
             "DISABLED"
           ]
         },
-        teacher_code: {
+        staff_code: {
           bsonType: "string"
         },
         full_name: {
@@ -267,4 +267,85 @@ database.createCollection("student_class_academic_years", {
       }
     }
   }
+  
 });
+
+// ===================== MODULE DIPLOMA =====================
+
+// 1. diplomas — bằng tốt nghiệp
+db.createCollection('diplomas', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['student_id', 'graduation_academic_year_id', 'status'],
+      properties: {
+        student_id: { bsonType: 'objectId' },
+        graduation_academic_year_id: { bsonType: 'objectId' },
+        status: { enum: ['NOT_STORED', 'STORED', 'HANDED_OVER'] },
+        diploma_number: { bsonType: ['string', 'null'] },
+        created_at: { bsonType: 'date' },
+        updated_at: { bsonType: 'date' }
+      }
+    }
+  }
+});
+db.diplomas.createIndex({ student_id: 1 }, { unique: true });
+db.diplomas.createIndex({ graduation_academic_year_id: 1, status: 1 });
+
+// 2. diploma_pickup_schedules — lịch phát bằng theo tuần
+db.createCollection('diploma_pickup_schedules', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['academic_year_id', 'year_week', 'week_start_date', 'week_end_date', 'days'],
+      properties: {
+        academic_year_id: { bsonType: 'objectId' },
+        year_week: { bsonType: 'string' },
+        week_start_date: { bsonType: 'date' },
+        week_end_date: { bsonType: 'date' },
+        days: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            required: ['day_of_week', 'enabled', 'start_time', 'end_time', 'capacity', 'registered_count'],
+            properties: {
+              day_of_week: { enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'] },
+              enabled: { bsonType: 'bool' },
+              start_time: { bsonType: 'string' },
+              end_time: { bsonType: 'string' },
+              capacity: { bsonType: 'int' },
+              registered_count: { bsonType: 'int' }
+            }
+          }
+        },
+        created_at: { bsonType: 'date' },
+        updated_at: { bsonType: 'date' }
+      }
+    }
+  }
+});
+db.diploma_pickup_schedules.createIndex({ year_week: 1 }, { unique: true });
+db.diploma_pickup_schedules.createIndex({ week_start_date: 1, week_end_date: 1 });
+
+// 3. diploma_pickup_registrations — phiếu đăng ký nhận bằng
+db.createCollection('diploma_pickup_registrations', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['student_id', 'diploma_id', 'schedule_id', 'pickup_date', 'status'],
+      properties: {
+        student_id: { bsonType: 'objectId' },
+        diploma_id: { bsonType: 'objectId' },
+        schedule_id: { bsonType: 'objectId' },
+        pickup_date: { bsonType: 'string' },
+        status: { enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] },
+        note: { bsonType: 'string' },
+        created_at: { bsonType: 'date' },
+        updated_at: { bsonType: 'date' }
+      }
+    }
+  }
+});
+db.diploma_pickup_registrations.createIndex({ schedule_id: 1, pickup_date: 1, student_id: 1 }, { unique: true });
+db.diploma_pickup_registrations.createIndex({ student_id: 1, pickup_date: 1 });
+db.diploma_pickup_registrations.createIndex({ pickup_date: 1 });

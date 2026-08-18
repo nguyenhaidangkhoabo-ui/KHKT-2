@@ -11,6 +11,11 @@ import studentRouter from './modules/core/routes/student.routes.js';
 import classYearRouter from './modules/core/routes/class-year.routes.js';
 import studentClassRouter from './modules/core/routes/student-class.routes.js';
 import teacherRouter from './modules/core/routes/teacher.routes.js';
+// DIPLOMA MODULE
+import diplomaDiplomasRouter from './modules/diploma/routes/diplomas.routes.js';
+import diplomaSchedulesRouter from './modules/diploma/routes/schedules.routes.js';
+import diplomaRegistrationsRouter from './modules/diploma/routes/registrations.routes.js';
+import diplomaTeacherRouter from './modules/diploma/routes/teacher.routes.js';
 
 const app = express();
 
@@ -29,6 +34,11 @@ app.get('/health', (req, res) => {
 });
 
 // CORE MODULE — 9 routers dưới prefix /api/core/...
+// DIPLOMA MODULE — 4 routers dưới prefix /api/diploma/...
+app.use('/api/diploma/diplomas', diplomaDiplomasRouter);
+app.use('/api/diploma/schedules', diplomaSchedulesRouter);
+app.use('/api/diploma/registrations', diplomaRegistrationsRouter);
+app.use('/api/diploma/teacher', diplomaTeacherRouter);
 app.use('/api/core/auth', authRouter);
 app.use('/api/core/profile', profileRouter);
 app.use('/api/core/years', academicYearRouter);

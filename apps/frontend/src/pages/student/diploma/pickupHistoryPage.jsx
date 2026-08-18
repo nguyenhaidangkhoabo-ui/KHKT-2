@@ -50,9 +50,9 @@ export default function PickupHistoryPage() {
           <Card key={r._id}>
             <div className="flex-between">
               <div>
-                <div style={{ fontWeight: 700 }}>{formatDate(r.schedule_date?.date, true)}</div>
+                <div style={{ fontWeight: 700 }}>{formatDate(r.pickup_date)}</div>
                 <div className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>
-                  {r.schedule_date?.shift_name || ''}
+                  {r.diploma_id?.diploma_number ? `Số hiệu bằng: ${r.diploma_id.diploma_number}` : ''}
                 </div>
               </div>
               <Badge variant={BADGE_COLOR[r.status] || 'secondary'}>

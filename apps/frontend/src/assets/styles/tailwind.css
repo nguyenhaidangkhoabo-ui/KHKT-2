@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  /* Font Family */
+  --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  /* Primary Palette (Slate Blue ~ #3368A0) */
+  --color-primary: #295483;
+  --color-primary-50: #edf5fc;
+  --color-primary-100: #d5e7f7;
+  --color-primary-200: #abceef;
+  --color-primary-300: #7cb0e4;
+  --color-primary-400: #5492d3;
+  --color-primary-500: #3368a0;
+  --color-primary-600: #295483;
+  --color-primary-700: #204368;
+  --color-primary-800: #193452;
+  --color-primary-900: #12253a;
+  --color-primary-950: #0c1725;
+
+  /* Secondary / Warm Gold Accent Palette */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+
+  /* Accent Palette (Red) */
+  --color-accent: #e63946;
+  --color-accent-50: #fff1f2;
+  --color-accent-100: #ffe4e6;
+  --color-accent-200: #fecdd3;
+  --color-accent-300: #fda4af;
+  --color-accent-400: #fb7185;
+  --color-accent-500: #e63946;
+  --color-accent-600: #d62828;
+  --color-accent-700: #b71c1c;
+  --color-accent-800: #9b1c1c;
+  --color-accent-900: #7f1d1d;
+  --color-accent-950: #450a0a;
+
+  /* Dominant / Background Surfaces (80% Light Theme) */
+  --color-bg-main: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8fafc;
+
+  /* Shadows */
+  --shadow-primary: 0 4px 14px 0 rgba(41, 84, 131, 0.25);
+  --shadow-accent: 0 4px 14px 0 rgba(230, 57, 70, 0.25);
+}
+

@@ -1,38 +1,36 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from '../context/authcontext'
-import { NotificationProvider } from '../context/notificationContext'
-import ToastContainer from '../components/feedback/toast'
-import ProtectedRoute from './ProtectedRoute'
-import AuthRoutes from './authRoutes'
-import StudentRoutes from './studentRoutes'
-import StaffRoutes from './staffRoutes'
-import AdminRoutes from './adminRoutes'
+import { LandingLayout, DashboardLayout, AuthLayout } from '../layouts'
+import HomePage from '../pages/public/HomePage'
+import AboutPage from '../pages/public/AboutPage'
+import ContactPage from '../pages/public/ContactPage'
+import LoginPage from '../pages/public/LoginPage'
+import DashboardOverviewPage from '../pages/admin/DashboardOverviewPage'
+import ProfilePage from '../pages/admin/ProfilePage'
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <NotificationProvider>
-          <ToastContainer />
-          <Routes>
-            <Route path="/login" element={<AuthRoutes />} />
-            <Route
-              path="/student/*"
-              element={<ProtectedRoute roles={['STUDENT']}><StudentRoutes /></ProtectedRoute>}
-            />
-            <Route
-              path="/staff/*"
-              element={<ProtectedRoute roles={['TEACHER']}><StaffRoutes /></ProtectedRoute>}
-            />
-            <Route
-              path="/admin/*"
-              element={<ProtectedRoute roles={['BGH', 'ADMIN', 'SYSTEM_ADMIN']}><AdminRoutes /></ProtectedRoute>}
-            />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </NotificationProvider>
-      </AuthProvider>
+      <Routes>
+        <Route element={<LandingLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
+
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
+
+        <Route path="/admin" element={<DashboardLayout title="Quản trị hệ thống" />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardOverviewPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+
+        <Route path="/profile" element={<Navigate to="/admin/profile" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }

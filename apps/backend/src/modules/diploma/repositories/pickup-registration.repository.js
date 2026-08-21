@@ -17,7 +17,7 @@ export class PickupRegistrationRepository {
       .populate(SCHEDULE_POPULATE);
   }
 
-  // Các đăng ký TƯƠNG LAI của học sinh (chưa hủy)
+  
   static async findFutureByStudent(studentId, todayStr) {
     return await PickupRegistration.find({
       student_id: studentId,
@@ -29,7 +29,7 @@ export class PickupRegistrationRepository {
       .populate(DIPLOMA_POPULATE);
   }
 
-  // 1 đăng ký tương lai gần nhất (kiểm tra REG-07: chỉ 1 đăng ký tương lai)
+  
   static async findUpcomingForStudent(studentId, todayStr) {
     return await PickupRegistration.findOne({
       student_id: studentId,
@@ -38,7 +38,7 @@ export class PickupRegistrationRepository {
     });
   }
 
-  // Lịch sử: quá khứ hoặc đã hoàn thành/hủy
+  
   static async findHistoryByStudent(studentId, todayStr) {
     return await PickupRegistration.find({
       student_id: studentId,
@@ -52,7 +52,7 @@ export class PickupRegistrationRepository {
       .populate(DIPLOMA_POPULATE);
   }
 
-  // Danh sách phân trang cho BGH/ADMIN
+  
   static async findList({ pickup_date, student_id, page = 1, limit = 20 }) {
     const query = {};
     if (pickup_date) query.pickup_date = pickup_date;
@@ -76,7 +76,7 @@ export class PickupRegistrationRepository {
     };
   }
 
-  // Danh sách đăng ký theo ngày (dùng cho by-date & export)
+  
   static async findByDate(pickupDate) {
     return await PickupRegistration.find({ pickup_date: pickupDate })
       .sort({ created_at: 1 })
@@ -102,7 +102,7 @@ export class PickupRegistrationRepository {
     );
   }
 
-  // Đánh dấu hoàn thành tất cả đăng ký của học sinh (khi trao bằng)
+  
   static async markCompletedByStudent(studentId, session) {
     const opts = session ? { session } : {};
     return await PickupRegistration.updateMany(
@@ -123,7 +123,7 @@ export class PickupRegistrationRepository {
     return counts;
   }
 
-    // Đánh dấu hoàn thành đăng ký cho nhiều học sinh (khi bulk-handover)
+    
   static async markCompletedByStudentMany(studentIds, session) {
     const opts = session ? { session } : {};
     return await PickupRegistration.updateMany(

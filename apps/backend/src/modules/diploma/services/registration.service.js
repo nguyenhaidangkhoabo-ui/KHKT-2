@@ -24,11 +24,11 @@ function dayOfWeekFromDate(dateStr) {
 }
 
 export class RegistrationService {
-  // POST /registrations — đăng ký nhận bằng (REG-01..11)
+  
   static async register(studentId, data) {
     const pickupDate = data?.pickup_date;
 
-    // REG-05: định dạng + không đăng ký quá khứ
+    
     if (!pickupDate || !DATE_REGEX.test(pickupDate)) {
       throw new AppError('Ngày nhận bằng không hợp lệ (định dạng YYYY-MM-DD).', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
@@ -37,7 +37,7 @@ export class RegistrationService {
       throw new AppError('Không thể đăng ký nhận bằng vào ngày trong quá khứ.', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    // REG-01/02: học sinh phải đã tốt nghiệp
+    
     const student = await StudentAccount.findById(studentId).select('student_code full_name academic_status');
     if (!student) {
       throw new AppError('Không tìm thấy học sinh.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -46,7 +46,7 @@ export class RegistrationService {
       throw new AppError('Chỉ học sinh đã tốt nghiệp mới được đăng ký nhận bằng.', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
     }
 
-    // REG-04: bằng phải ở trạng thái STORED
+    
     const diploma = await DiplomaRepository.findByStudentId(studentId);
     if (!diploma) {
       throw new AppError('Bạn chưa có bằng tốt nghiệp trong hệ thống.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
@@ -66,13 +66,13 @@ export class RegistrationService {
       );
     }
 
-    // REG-07: chỉ 1 đăng ký tương lai
+    
     const existing = await PickupRegistrationRepository.findUpcomingForStudent(studentId, todayStr);
     if (existing) {
       throw new AppError('Bạn đã có lịch hẹn nhận bằng trong tương lai.', HttpStatus.CONFLICT, ErrorCode.ALREADY_REGISTERED);
     }
 
-    // Tìm lịch chứa ngày đã chọn
+    
     const pickupDateObj = parseDateFromISO(pickupDate);
     const schedule = await PickupScheduleRepository.findByDate(pickupDateObj);
     if (!schedule) {
@@ -84,7 +84,7 @@ export class RegistrationService {
       throw new AppError('Ngày bạn chọn không mở nhận bằng.', HttpStatus.BAD_REQUEST, ErrorCode.SCHEDULE_CONFLICT);
     }
 
-    // REG-08/09/10: kiểm tra capacity ATOMIC trong transaction
+    
     const session = await PickupRegistrationRepository.startSession();
     session.startTransaction();
     try {
@@ -121,17 +121,11 @@ export class RegistrationService {
     }
   }
 
-  // DELETE /registrations/:id — hủy đăng ký (học sinh sở hữu hoặc BGH/ADMIN)
-  static async cancel(user, registrationId) {
+  
+  static async cancel(registrationId) {
     const registration = await PickupRegistrationRepository.findById(registrationId);
     if (!registration) {
       throw new AppError('Không tìm thấy phiếu đăng ký.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
-    }
-
-    const isOwner = String(registration.student_id?._id || registration.student_id) === String(user.sub);
-    const isManager = ['BGH', 'ADMIN', 'SYSTEM_ADMIN'].includes(user.role);
-    if (!isOwner && !isManager) {
-      throw new AppError('Bạn không có quyền hủy phiếu đăng ký này.', HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
     }
 
     const todayStr = todayISO();
@@ -150,7 +144,7 @@ export class RegistrationService {
     try {
       await PickupRegistrationRepository.updateStatus(registration._id, RegistrationStatus.CANCELLED, session);
 
-      // Hoàn lại 1 slot capacity cho ngày đã hủy
+      
       const schedule = await PickupScheduleRepository.findByIdForUpdate(registration.schedule_id, session);
       const day = schedule?.days?.find((d) => d.day_of_week === dayOfWeekFromDate(registration.pickup_date));
       if (day && day.registered_count > 0) {
@@ -168,17 +162,17 @@ export class RegistrationService {
     }
   }
 
-  // GET /registrations/me — các phiếu tương lai của học sinh
+  
   static async getMe(studentId) {
     return await PickupRegistrationRepository.findFutureByStudent(studentId, todayISO());
   }
 
-  // GET /registrations/me/history — lịch sử đăng ký của học sinh
+  
   static async getMeHistory(studentId) {
     return await PickupRegistrationRepository.findHistoryByStudent(studentId, todayISO());
   }
 
-  // GET /registrations/stats — thống kê (BGH/ADMIN)
+  
   static async getStats() {
     const byStatus = await PickupRegistrationRepository.countByStatus();
     const todayStr = todayISO();
@@ -190,7 +184,7 @@ export class RegistrationService {
     return { ...byStatus, today: todayCount, upcoming: upcomingCount };
   }
 
-  // GET /registrations — danh sách phân trang (BGH/ADMIN)
+  
   static async getList(filters = {}) {
     const page = parseInt(filters.page, 10) || 1;
     const limit = parseInt(filters.limit, 10) || 20;
@@ -202,7 +196,7 @@ export class RegistrationService {
     });
   }
 
-  // GET /registrations/by-date?pickup_date=YYYY-MM-DD — danh sách học sinh nhận bằng theo ngày
+  
   static async getByDate(pickupDate) {
     if (!pickupDate || !DATE_REGEX.test(pickupDate)) {
       throw new AppError('Thiếu tham số pickup_date (YYYY-MM-DD).', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);

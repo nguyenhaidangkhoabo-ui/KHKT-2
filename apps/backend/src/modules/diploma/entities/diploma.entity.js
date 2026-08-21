@@ -32,9 +32,9 @@ const diplomaSchema = new mongoose.Schema(
   }
 );
 
-// DIP-01: mỗi học sinh tối đa 1 bằng tốt nghiệp
+
 diplomaSchema.index({ student_id: 1 }, { unique: true });
-// Index thường dùng khi lọc theo năm + trạng thái
+
 diplomaSchema.index({ graduation_academic_year_id: 1, status: 1 });
 
 export const Diploma = mongoose.model('Diploma', diplomaSchema);

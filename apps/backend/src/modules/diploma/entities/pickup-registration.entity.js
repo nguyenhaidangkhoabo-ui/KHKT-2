@@ -18,7 +18,7 @@ const pickupRegistrationSchema = new mongoose.Schema(
       ref: 'PickupSchedule',
       required: true
     },
-    // Ngày nhận bằng dạng chuỗi YYYY-MM-DD (so sánh chuỗi là đúng thứ tự thời gian)
+    
     pickup_date: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
     status: {
       type: String,
@@ -33,7 +33,7 @@ const pickupRegistrationSchema = new mongoose.Schema(
   }
 );
 
-// An toàn chống đăng ký trùng (kết hợp với kiểm tra nghiệp vụ REG-07)
+
 pickupRegistrationSchema.index({ schedule_id: 1, pickup_date: 1, student_id: 1 }, { unique: true });
 pickupRegistrationSchema.index({ student_id: 1, pickup_date: 1 });
 pickupRegistrationSchema.index({ pickup_date: 1 });

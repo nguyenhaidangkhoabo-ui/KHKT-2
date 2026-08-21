@@ -6,7 +6,7 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: 'lax',
   secure: false,
-  maxAge: 24 * 60 * 60 * 1000 // 1 ngày
+  maxAge: 24 * 60 * 60 * 1000 
 };
 
 export const login = async (req, res, next) => {

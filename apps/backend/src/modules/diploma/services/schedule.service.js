@@ -5,10 +5,10 @@ import { PickupScheduleRepository } from '../repositories/pickup-schedule.reposi
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// ---- Hàm hỗ trợ tuần (chuẩn ISO) ----
+
 function getMonday(date) {
   const d = new Date(date);
-  const day = d.getDay(); // 0=Chủ nhật ... 6=Thứ 7
+  const day = d.getDay(); 
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
@@ -18,7 +18,7 @@ function getMonday(date) {
 function getISOWeek(date) {
   const d = new Date(date);
   const day = d.getDay() || 7;
-  d.setDate(d.getDate() + 4 - day); // dời về thứ 5 của tuần
+  d.setDate(d.getDate() + 4 - day); 
   const yearStart = new Date(d.getFullYear(), 0, 1);
   const week = Math.ceil((((d - yearStart) / DAY_MS) + 1) / 7);
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
@@ -32,7 +32,7 @@ function dateToISOString(d) {
 }
 
 export class ScheduleService {
-  // Thông tin tuần hiện tại
+  
   static weekInfo(date = new Date()) {
     const weekStart = getMonday(date);
     const weekEnd = new Date(weekStart.getTime() + 6 * DAY_MS);
@@ -45,7 +45,7 @@ export class ScheduleService {
     };
   }
 
-  // Thông tin tuần sau (chỉ tuần sau mới được chỉnh sửa — SCH-04)
+  
   static nextWeekInfo(date = new Date()) {
     const weekStart = getMonday(date);
     weekStart.setDate(weekStart.getDate() + 7);
@@ -59,7 +59,7 @@ export class ScheduleService {
     };
   }
 
-  // GET /schedules/current-week
+  
   static async getCurrentWeek() {
     const info = this.weekInfo();
     const schedule = await PickupScheduleRepository.findByYearWeek(info.yearWeek);
@@ -69,7 +69,7 @@ export class ScheduleService {
     return schedule;
   }
 
-  // GET /schedules/next-week
+  
   static async getNextWeek() {
     const info = this.nextWeekInfo();
     const schedule = await PickupScheduleRepository.findByYearWeek(info.yearWeek);
@@ -79,7 +79,7 @@ export class ScheduleService {
     return schedule;
   }
 
-  // GET /schedules — danh sách lịch
+  
   static async getList(filters = {}) {
     if (filters.year_week) {
       const schedule = await PickupScheduleRepository.findByYearWeek(filters.year_week);
@@ -91,7 +91,7 @@ export class ScheduleService {
     return await PickupScheduleRepository.findAll();
   }
 
-  // POST /schedules/next-week/generate — tạo lịch tuần sau (mặc định T2–T6, 07:30–17:00, capacity 100)
+  
   static async generateNextWeek() {
     const info = this.nextWeekInfo();
 
@@ -100,7 +100,7 @@ export class ScheduleService {
       throw new AppError('Lịch phát bằng tuần sau đã tồn tại.', HttpStatus.CONFLICT, ErrorCode.VALIDATION_ERROR);
     }
 
-    // Năm học hiện tại (cờ is_current) — fallback năm gần nhất
+    
     let academicYear = await AcademicYear.findOne({ is_current: true });
     if (!academicYear) {
       academicYear = await AcademicYear.findOne().sort({ start_year: -1 });
@@ -124,7 +124,7 @@ export class ScheduleService {
     });
   }
 
-  // PATCH /schedules/next-week/days/:dayOfWeek — chỉnh 1 ngày của lịch tuần sau
+  
   static async patchDay(dayOfWeek, patch) {
     if (!Object.values(DayOfWeek).includes(dayOfWeek)) {
       throw new AppError('Ngày trong tuần không hợp lệ.', HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR);
@@ -141,7 +141,7 @@ export class ScheduleService {
       throw new AppError('Ngày này không tồn tại trong lịch tuần sau.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
-    // SCH: không được tắt ngày / giảm capacity dưới số đã đăng ký → SCHEDULE_CONFLICT
+    
     const wouldDisable = patch.enabled === false;
     const wouldShrink = patch.capacity != null && patch.capacity < day.registered_count;
     if (wouldDisable || wouldShrink) {
@@ -155,7 +155,7 @@ export class ScheduleService {
     return await PickupScheduleRepository.updateDay(schedule._id, dayOfWeek, patch);
   }
 
-  // GET /schedules/available-dates — các ngày học sinh có thể đăng ký
+  
   static async getAvailableDates() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -173,8 +173,8 @@ export class ScheduleService {
         const date = new Date(weekStart.getTime() + dayIndex * DAY_MS);
         const dateStr = dateToISOString(date);
 
-        if (dateStr < todayStr) continue;          // bỏ ngày đã qua
-        if (day.registered_count >= day.capacity) continue; // ngày đã đủ
+        if (dateStr < todayStr) continue;          
+        if (day.registered_count >= day.capacity) continue; 
 
         result.push({
           _id: String(schedule._id),

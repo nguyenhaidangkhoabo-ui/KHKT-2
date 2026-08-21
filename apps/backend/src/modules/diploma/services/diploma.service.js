@@ -5,7 +5,7 @@ import { DiplomaStatus, DIPLOMA_STATUS_TRANSITIONS } from '../enums.js';
 import { DiplomaRepository } from '../repositories/diploma.repository.js';
 import { PickupRegistrationRepository } from '../repositories/pickup-registration.repository.js';
 
-// DIP-02: kiểm tra học sinh có học khối 12 trong năm tốt nghiệp không
+
 async function isGrade12InYear(studentId, graduationAcademicYearId) {
   const records = await StudentClassAcademicYear.find({ student_id: studentId })
     .populate('class_academic_year_id')
@@ -19,7 +19,7 @@ async function isGrade12InYear(studentId, graduationAcademicYearId) {
 }
 
 export class DiplomaService {
-  // GET /diplomas/me — học sinh xem bằng của mình
+  
   static async getMe(studentId) {
     const diploma = await DiplomaRepository.findByStudentIdPopulated(studentId);
     if (!diploma) return null;
@@ -35,12 +35,12 @@ export class DiplomaService {
     };
   }
 
-  // GET /diplomas/stats — thống kê theo trạng thái
+  
   static async getStats() {
     return await DiplomaRepository.countByStatus();
   }
 
-  // GET /diplomas — danh sách (BGH/ADMIN) với bộ lọc
+  
   static async getAll(filters = {}) {
     let studentIds;
     const keyword = filters.student_code || filters.search;
@@ -63,7 +63,7 @@ export class DiplomaService {
     });
   }
 
-  // GET /diplomas/:id
+  
   static async getById(id) {
     const diploma = await DiplomaRepository.findById(id);
     if (!diploma) {
@@ -72,7 +72,7 @@ export class DiplomaService {
     return diploma;
   }
 
-  // POST /diplomas — tạo bằng (DIP-01, DIP-02)
+  
   static async create(data) {
     const { student_id, graduation_academic_year_id } = data;
 
@@ -93,7 +93,7 @@ export class DiplomaService {
       throw new AppError('Không tìm thấy năm học.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
-    // DIP-01: tối đa 1 bằng / học sinh / năm
+    
     const exists = await DiplomaRepository.existsByStudentAndYear(student_id, graduation_academic_year_id);
     if (exists) {
       throw new AppError(
@@ -110,7 +110,7 @@ export class DiplomaService {
     });
   }
 
-  // POST /diplomas/bulk-create — tạo hàng loạt cho toàn bộ học sinh tốt nghiệp của năm
+  
   static async bulkCreate(data) {
     let students;
 
@@ -122,7 +122,7 @@ export class DiplomaService {
         .select('_id')
         .lean();
     } else if (data.academic_year_id) {
-      // Toàn bộ học sinh đã tốt nghiệp trong hệ thống
+      
       students = await StudentAccount.find({ academic_status: AcademicStatus.GRADUATED })
         .select('_id')
         .lean();
@@ -162,7 +162,7 @@ export class DiplomaService {
     };
   }
 
-  // POST /diplomas/:id/receive — NOT_STORED → STORED
+  
   static async receive(id) {
     const diploma = await DiplomaRepository.findById(id);
     if (!diploma) {
@@ -178,7 +178,7 @@ export class DiplomaService {
       );
     }
 
-    // Sinh số hiệu bằng nếu chưa có
+    
     const extra = {};
     if (!diploma.diploma_number) {
       const count = await DiplomaRepository.countAll();
@@ -188,7 +188,7 @@ export class DiplomaService {
     return await DiplomaRepository.updateStatus(id, DiplomaStatus.STORED, extra);
   }
 
-  // POST /diplomas/bulk-receive — cập nhật nhiều bằng cùng lúc
+  
   static async bulkReceive(diplomaIds) {
     const result = await DiplomaRepository.bulkUpdateStatus(
       diplomaIds,
@@ -201,7 +201,7 @@ export class DiplomaService {
     };
   }
 
-  // POST /diplomas/:id/handover — STORED → HANDED_OVER
+  
   static async handover(id) {
     const diploma = await DiplomaRepository.findById(id);
     if (!diploma) {
@@ -224,13 +224,13 @@ export class DiplomaService {
 
     const updated = await DiplomaRepository.updateStatus(id, DiplomaStatus.HANDED_OVER);
 
-    // Đồng bộ: mọi phiếu đăng ký nhận bằng của học sinh → COMPLETED
+    
     await PickupRegistrationRepository.markCompletedByStudent(diploma.student_id);
 
     return updated;
   }
 
-  // POST /diplomas/bulk-handover
+  
   static async bulkHandover(diplomaIds) {
     const result = await DiplomaRepository.bulkUpdateStatus(
       diplomaIds,

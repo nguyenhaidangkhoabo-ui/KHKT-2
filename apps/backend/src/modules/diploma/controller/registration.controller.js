@@ -34,7 +34,7 @@ export class RegistrationController {
 
   static async cancel(req, res, next) {
     try {
-      const result = await RegistrationService.cancel(req.user, req.params.id);
+      const result = await RegistrationService.cancel(req.params.id);
       return res.status(HttpStatus.OK).json({ success: true, ...result });
     } catch (err) { next(err); }
   }

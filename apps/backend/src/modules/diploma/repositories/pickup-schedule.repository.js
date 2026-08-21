@@ -21,7 +21,7 @@ export class PickupScheduleRepository {
       .populate(YEAR_POPULATE);
   }
 
-  // Lịch chứa ngày `date` (dựa vào khoảng tuần)
+  
   static async findByDate(date) {
     return await PickupSchedule.findOne({
       week_start_date: { $lte: date },
@@ -29,7 +29,7 @@ export class PickupScheduleRepository {
     });
   }
 
-  // Các lịch từ ngày `fromDate` trở đi (dùng cho available-dates)
+  
   static async findFromDate(fromDate) {
     return await PickupSchedule.find({ week_end_date: { $gte: fromDate } })
       .sort({ week_start_date: 1 });
@@ -43,7 +43,7 @@ export class PickupScheduleRepository {
     return await PickupSchedule.findByIdAndUpdate(id, { $set: data }, { new: true });
   }
 
-  // Cập nhật một ngày cụ thể trong mảng days
+  
   static async updateDay(id, dayOfWeek, patch) {
     const setFields = {};
     if (patch.enabled !== undefined) setFields['days.$[elem].enabled'] = patch.enabled;

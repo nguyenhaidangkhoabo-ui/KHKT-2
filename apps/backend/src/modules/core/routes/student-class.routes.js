@@ -2,8 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import xlsx from 'xlsx';
 import { StudentClassController } from '../controller/student-class.controller.js';
-import { authenticate, authorizeRoles } from '../services/author.service.js';
-import { UserRole } from '../enums.js';
+import { authenticate } from '../services/author.service.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -22,9 +21,9 @@ const parseExcel = (req, res, next) => {
   }
 };
 
-router.post('/assign', authenticate, authorizeRoles(UserRole.ADMIN, UserRole.SYSTEM_ADMIN), StudentClassController.assign);
-router.post('/bulk-assign', authenticate, authorizeRoles(UserRole.ADMIN, UserRole.SYSTEM_ADMIN), StudentClassController.bulkAssign);
-router.post('/:classAcademicYearId/import', authenticate, authorizeRoles(UserRole.ADMIN, UserRole.SYSTEM_ADMIN), upload.single('file'), parseExcel, StudentClassController.importExcel);
-router.delete('/:classAcademicYearId/students/:studentId', authenticate, authorizeRoles(UserRole.ADMIN, UserRole.SYSTEM_ADMIN), StudentClassController.remove);
+router.post('/assign', authenticate, StudentClassController.assign);
+router.post('/bulk-assign', authenticate, StudentClassController.bulkAssign);
+router.post('/:classAcademicYearId/import', authenticate, upload.single('file'), parseExcel, StudentClassController.importExcel);
+router.delete('/:classAcademicYearId/students/:studentId', authenticate, StudentClassController.remove);
 
 export default router;

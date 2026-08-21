@@ -1,14 +1,16 @@
-import { AppError, HttpStatus, ErrorCode } from '../../../core/error.js';
 import { ClassAcademicYear, StudentClassAcademicYear } from '../../core/entities/index.js';
 import { Diploma } from '../entities/diploma.entity.js';
 
 export class TeacherService {
-  // GET /teacher/my-class — giáo viên xem tình trạng bằng của lớp mình (TCH-01..03)
+  
   static async getMyClass(user) {
-    // TCH-01: chỉ lớp mình làm GVCN
-    const classAYs = await ClassAcademicYear.find({ homeroom_staff_id: user.sub }).lean();
+    const filter = user?.sub ? { homeroom_staff_id: user.sub } : {};
+    const classAYs = await ClassAcademicYear.find(filter).lean();
     if (!classAYs.length) {
-      throw new AppError('Bạn không phải giáo viên chủ nhiệm của lớp nào.', HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN);
+      return {
+        class_name: '',
+        diplomas: []
+      };
     }
 
     const classAYIds = classAYs.map((c) => c._id);

@@ -27,14 +27,14 @@ export class AcademicYearService {
 
   static async delete(id) {
     const year = await this.getById(id);
-    // AY-03: Không xóa năm học đang là năm hiện tại
+    
     if (year.is_current) {
       throw new AppError('Không thể xóa năm học đang là năm hiện tại (AY-03).', HttpStatus.CONFLICT, ErrorCode.VALIDATION_ERROR);
     }
     return await AcademicYearRepository.delete(id);
   }
 
-  // AY-01: Chỉ có duy nhất 1 năm học is_current = true (transaction)
+  
   static async setCurrentAcademicYear(yearId) {
     const session = await AcademicYearRepository.startSession();
     session.startTransaction();

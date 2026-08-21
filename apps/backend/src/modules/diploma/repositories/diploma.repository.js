@@ -47,7 +47,7 @@ export class DiplomaRepository {
   }
 
   static async bulkCreate(datas) {
-    // ordered: false → chèn tối đa, bỏ qua dòng trùng lặp
+    
     return await Diploma.insertMany(datas, { ordered: false });
   }
 
@@ -64,7 +64,7 @@ export class DiplomaRepository {
   }
 
   static async bulkUpdateStatus(ids, fromStatus, toStatus, extra = {}) {
-    // Chỉ cập nhật những bằng đang ở đúng trạng thái nguồn (bảo vệ state machine)
+    
     return await Diploma.updateMany(
       { _id: { $in: ids }, status: fromStatus },
       { $set: { status: toStatus, ...extra } }

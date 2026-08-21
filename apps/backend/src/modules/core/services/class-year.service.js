@@ -39,7 +39,7 @@ export class ClassYearService {
     if (!classAY) {
       throw new AppError('Không tìm thấy lớp-năm học.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
-    // AY-03: Không xóa nếu đã có học sinh trong lớp
+    
     const students = await StudentClassAcademicYearRepository.findStudentsByClassAcademicYear(id);
     if (students.length > 0) {
       throw new AppError('Không thể xóa lớp-năm học đã có học sinh.', HttpStatus.CONFLICT, ErrorCode.VALIDATION_ERROR);

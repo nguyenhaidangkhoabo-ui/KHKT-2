@@ -1,11 +1,11 @@
-// Trạng thái bằng tốt nghiệp (state machine: NOT_STORED → STORED → HANDED_OVER)
+
 export const DiplomaStatus = Object.freeze({
-  NOT_STORED: 'NOT_STORED',     // Trường chưa nhận bằng từ Sở
-  STORED: 'STORED',             // Trường đã lưu bằng
-  HANDED_OVER: 'HANDED_OVER'    // Đã trao cho học sinh
+  NOT_STORED: 'NOT_STORED',     
+  STORED: 'STORED',             
+  HANDED_OVER: 'HANDED_OVER'    
 });
 
-// Thứ trong tuần
+
 export const DayOfWeek = Object.freeze({
   MONDAY: 'MONDAY',
   TUESDAY: 'TUESDAY',
@@ -16,15 +16,15 @@ export const DayOfWeek = Object.freeze({
   SUNDAY: 'SUNDAY'
 });
 
-// Trạng thái phiếu đăng ký nhận bằng (bổ sung để đồng bộ frontend hiện tại)
+
 export const RegistrationStatus = Object.freeze({
-  PENDING: 'PENDING',       // Chờ xác nhận (dự phòng)
-  CONFIRMED: 'CONFIRMED',   // Đã xác nhận lịch
-  COMPLETED: 'COMPLETED',   // Đã nhận bằng
-  CANCELLED: 'CANCELLED'    // Đã hủy (giữ lịch sử)
+  PENDING: 'PENDING',       
+  CONFIRMED: 'CONFIRMED',   
+  COMPLETED: 'COMPLETED',   
+  CANCELLED: 'CANCELLED'    
 });
 
-// Ánh xạ index getDay() của JS (0=Chủ nhật) → DayOfWeek
+
 export const DAY_NAMES = [
   DayOfWeek.SUNDAY,
   DayOfWeek.MONDAY,

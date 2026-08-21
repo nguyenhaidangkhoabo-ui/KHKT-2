@@ -8,12 +8,12 @@ export const ACCESS_TOKEN_COOKIE_NAME = 'access_token';
 
 export class AuthenService {
   static async login(username, password) {
-    // Check trong staff_accounts trước
+    
     let user = await StaffAccountRepository.findByUsername(username);
     let isStaff = true;
 
     if (!user) {
-      // Nếu không phải staff, check trong student_accounts
+      
       user = await StudentAccountRepository.findByUsername(username);
       isStaff = false;
     }
@@ -53,7 +53,7 @@ export class AuthenService {
   }
 
   static async logout() {
-    // JWT stateless: chỉ cần xóa cookie phía client
+    
     return true;
   }
 }

@@ -53,7 +53,7 @@ export class StudentService {
     return await StudentAccountRepository.delete(id);
   }
 
-  // academic_status state machine
+  
   static async updateAcademicStatus(studentId, newStatus, currentGrade) {
     const student = await this.getById(studentId);
     const currentStatus = student.academic_status;
@@ -68,7 +68,7 @@ export class StudentService {
       );
     }
 
-    // Chỉ học sinh khối 12 mới được tốt nghiệp
+    
     if (newStatus === AcademicStatus.GRADUATED && currentGrade !== 'GRADE_12') {
       throw new AppError(
         'Chỉ học sinh khối 12 mới được phép chuyển sang trạng thái Tốt nghiệp.',

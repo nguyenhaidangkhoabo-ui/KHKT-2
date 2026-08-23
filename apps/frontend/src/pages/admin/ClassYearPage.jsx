@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { CalendarDays, Plus, Trash2, UserCheck, RefreshCw } from 'lucide-react'
-import { classYearService, classService, yearService, staffService } from '../../services'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { CalendarDays, Plus, Trash2, UserCheck, RefreshCw, Upload } from 'lucide-react'
+import { classYearService, classService, yearService, staffService, studentClassService } from '../../services'
 import { GRADE_LABELS } from '../../config/constants'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
@@ -28,6 +28,10 @@ export default function ClassYearPage() {
   const [homeroomStaffId, setHomeroomStaffId] = useState('')
   const [homeroomError, setHomeroomError] = useState('')
   const [assigning, setAssigning] = useState(false)
+
+  const [classImportTarget, setClassImportTarget] = useState(null)
+  const [importingClass, setImportingClass] = useState(false)
+  const fileInputRef = useRef(null)
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -190,6 +194,41 @@ export default function ClassYearPage() {
     }
   }
 
+  const openClassImport = (row) => {
+    setClassImportTarget(row)
+    fileInputRef.current?.click()
+  }
+
+  const handleImportClass = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !classImportTarget) return
+    try {
+      setImportingClass(true)
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await studentClassService.importExcel(classImportTarget._id, formData)
+      const result = res?.data || {}
+      const errors = Array.isArray(result.errors) ? result.errors : []
+      if (result.failed && errors.length) {
+        const detail = errors
+          .slice(0, 5)
+          .map((err) => `Dòng ${err?.row ?? '?'}: ${err?.message || String(err)}`)
+          .join('; ')
+        toast.error(`Import vào lớp có ${result.failed} dòng lỗi. ${detail}`)
+      } else if (result.failed && !errors.length) {
+        toast.error(`Import vào lớp có ${result.failed} dòng thất bại.`)
+      } else {
+        toast.success(`Đã import ${result.success ?? 0} học sinh vào lớp.`)
+      }
+    } catch (err) {
+      toast.error(err.message || 'Import file Excel vào lớp thất bại.')
+    } finally {
+      setImportingClass(false)
+      setClassImportTarget(null)
+    }
+  }
+
   const columns = [
     {
       key: 'class',
@@ -244,6 +283,15 @@ export default function ClassYearPage() {
         <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
+            onClick={() => openClassImport(row)}
+            title="Nhập Excel"
+            disabled={importingClass}
+            className="p-1.5 rounded-lg text-primary hover:bg-primary-50 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => openHomeroom(row)}
             title="Phân công chủ nhiệm"
             className="p-1.5 rounded-lg text-primary hover:bg-primary-50 transition-colors cursor-pointer"
@@ -277,6 +325,13 @@ export default function ClassYearPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleImportClass}
+            className="hidden"
+          />
           <Button variant="outline" size="sm" onClick={loadClassYears}>
             <RefreshCw className="w-4 h-4" />
             <span>Làm mới</span>

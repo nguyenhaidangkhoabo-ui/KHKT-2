@@ -25,8 +25,8 @@ services:
       - "${MONGO_PORT:-27017}:27017"
 
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-rootpassword}
 
     volumes:
       - hvn_mongodb_data:/data/db
@@ -52,8 +52,8 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${BACKEND_PORT:-3000}
       HOST: ${HOST:-0.0.0.0}
-      MONGO_URI: ${MONGO_URI}
-      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URI: ${MONGO_URI:-mongodb://root:rootpassword@mongodb:27017/hvn?authSource=admin&replicaSet=rs0}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_here}
     depends_on:
       mongodb:
         condition: service_healthy

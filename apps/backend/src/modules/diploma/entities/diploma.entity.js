@@ -33,8 +33,6 @@ const diplomaSchema = new mongoose.Schema(
 );
 
 
-diplomaSchema.index({ student_id: 1 }, { unique: true });
-
 diplomaSchema.index({ graduation_academic_year_id: 1, status: 1 });
 
 export const Diploma = mongoose.model('Diploma', diplomaSchema);

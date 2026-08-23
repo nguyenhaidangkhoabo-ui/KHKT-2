@@ -291,7 +291,7 @@ export default function StudentListPage() {
   // ===== Import / Export Excel =====
   const handleImportFile = async (e) => {
     const file = e.target.files?.[0]
-    e.target.value = '' // cho phép chọn lại cùng một file
+    e.target.value = ''
     if (!file) return
 
     try {
@@ -300,9 +300,18 @@ export default function StudentListPage() {
       formData.append('file', file)
       const res = await studentService.importExcel(formData)
       const result = res?.data || {}
-      toast.success(
-        `Import hoàn tất: thành công ${result.success ?? 0}, lỗi ${result.failed ?? 0}.`
-      )
+      const errors = Array.isArray(result.errors) ? result.errors : []
+      if (result.failed && errors.length) {
+        const detail = errors
+          .slice(0, 5)
+          .map((err) => `Dòng ${err?.row ?? '?'}: ${err?.message || String(err)}`)
+          .join('; ')
+        toast.error(`Import có ${result.failed} dòng lỗi. ${detail}`)
+      } else if (result.failed && !errors.length) {
+        toast.error(`Import có ${result.failed} dòng thất bại.`)
+      } else {
+        toast.success(`Import hoàn tất: thành công ${result.success ?? 0} dòng.`)
+      }
       await loadStudents()
     } catch (err) {
       toast.error(err.message || 'Import file Excel thất bại.')

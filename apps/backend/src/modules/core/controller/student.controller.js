@@ -95,7 +95,28 @@ export class StudentController {
     try {
       const list = await StudentService.getAll(req.query);
       const xlsx = (await import('xlsx')).default;
-      const worksheet = xlsx.utils.json_to_sheet(list);
+      const exportRows = (list || []).map((s) => ({
+        username: s.username,
+        // password không lưu plaintext; dùng mặc định để file round-trip import lại được
+        password: '123456',
+        student_code: s.student_code,
+        full_name: s.full_name,
+        birthdate: s.birthdate
+          ? (() => {
+              const d = new Date(s.birthdate)
+              const mm = String(d.getMonth() + 1).padStart(2, '0')
+              const dd = String(d.getDate()).padStart(2, '0')
+              return `${d.getFullYear()}-${mm}-${dd}`
+            })()
+          : '',
+        gender: s.gender,
+        email: s.email,
+        phone: s.phone || '',
+        father_phone: s.father_phone || '',
+        mother_phone: s.mother_phone || '',
+        enrollment_year: s.enrollment_year,
+      }));
+      const worksheet = xlsx.utils.json_to_sheet(exportRows);
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(workbook, worksheet, 'students');
       const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });

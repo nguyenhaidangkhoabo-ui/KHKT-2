@@ -1,8 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react'
-import { ROLE_LABELS } from '../../config/constants'
+import { ROLE_LABELS, HOME_BY_ROLE } from '../../config/constants'
 import { useAuth } from '../../context'
+
+// Đường dẫn hồ sơ cá nhân theo vai trò
+function getProfilePath(role) {
+  switch (role) {
+    case 'STUDENT':
+      return '/student/profile'
+    case 'TEACHER':
+      return '/staff/profile'
+    default:
+      return '/admin/profile'
+  }
+}
 
 export default function UserDropdown({ user: propUser = null, onLogout = null }) {
   const [open, setOpen] = useState(false)
@@ -11,6 +23,9 @@ export default function UserDropdown({ user: propUser = null, onLogout = null })
   const { user: authUser, logout: authLogout } = useAuth()
 
   const currentUser = propUser || authUser
+  const role = currentUser?.role
+  const homePath = HOME_BY_ROLE[role] || '/'
+  const profilePath = getProfilePath(role)
 
   useEffect(() => {
     const handler = (e) => {
@@ -32,8 +47,8 @@ export default function UserDropdown({ user: propUser = null, onLogout = null })
 
   const initials = (currentUser?.full_name || currentUser?.username || 'HVN').slice(0, 2).toUpperCase()
 
-  const getRoleBadgeClass = (role) => {
-    switch (role) {
+  const getRoleBadgeClass = (r) => {
+    switch (r) {
       case 'STUDENT':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200'
       case 'TEACHER':
@@ -60,8 +75,8 @@ export default function UserDropdown({ user: propUser = null, onLogout = null })
           <span className="text-xs font-bold text-slate-900 line-clamp-1 max-w-[120px]">
             {currentUser?.full_name || currentUser?.username || 'Người dùng'}
           </span>
-          <span className={`inline-block px-1 py-0.2 rounded text-[9px] font-bold w-fit mt-0.5 ${getRoleBadgeClass(currentUser?.role)}`}>
-            {ROLE_LABELS[currentUser?.role] || currentUser?.role || 'Thành viên'}
+          <span className={`inline-block px-1 py-0.2 rounded text-[9px] font-bold w-fit mt-0.5 ${getRoleBadgeClass(role)}`}>
+            {ROLE_LABELS[role] || role || 'Thành viên'}
           </span>
         </div>
         <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
@@ -71,24 +86,24 @@ export default function UserDropdown({ user: propUser = null, onLogout = null })
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="px-3.5 py-2.5 border-b border-slate-100 bg-slate-50/50">
             <p className="text-xs font-bold text-slate-900">{currentUser?.full_name || currentUser?.username}</p>
-            <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold mt-1 ${getRoleBadgeClass(currentUser?.role)}`}>
-              {ROLE_LABELS[currentUser?.role] || currentUser?.role}
+            <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold mt-1 ${getRoleBadgeClass(role)}`}>
+              {ROLE_LABELS[role] || role}
             </span>
           </div>
 
           <Link
-            to="/admin/dashboard"
+            to={homePath}
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-primary-50 hover:text-primary transition-colors"
           >
             <LayoutDashboard className="w-4 h-4" />
-            <span>Khu vực quản lý</span>
+            <span>Trang chính</span>
           </Link>
 
           <button
             onClick={() => {
               setOpen(false)
-              navigate('/admin/profile')
+              navigate(profilePath)
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-primary-50 hover:text-primary transition-colors cursor-pointer"
           >

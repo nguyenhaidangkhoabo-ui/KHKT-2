@@ -1,25 +1,137 @@
-import { 
-  Users, 
-  UserCheck, 
-  Award, 
-  GraduationCap, 
-  Calendar, 
-  TrendingUp, 
-  FileText, 
-  ShieldCheck 
+import { useEffect, useState } from 'react'
+import {
+  Users,
+  UserCheck,
+  Award,
+  GraduationCap,
+  Calendar,
+  ShieldCheck
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { ROLE_LABELS } from '../../config/constants'
+import {
+  studentService,
+  staffService,
+  diplomaService,
+  registrationService
+} from '../../services'
+
+const FALLBACK = '—'
+
+// Trích xuất tổng số bản ghi từ nhiều dạng response khác nhau
+function extractTotal(res) {
+  const d = res?.data ?? res
+  if (d == null) return null
+  if (typeof d === 'number') return d
+  if (Array.isArray(d)) return d.length
+  if (typeof d === 'object') {
+    if (d.total != null) return Number(d.total)
+    if (d.count != null) return Number(d.count)
+    if (Array.isArray(d.items)) return d.items.length
+    if (Array.isArray(d.docs)) return d.docs.length
+    if (Array.isArray(d.data)) return d.data.length
+  }
+  return null
+}
+
+// Tổng số bằng tốt nghiệp từ stats: { NOT_STORED, STORED, HANDED_OVER }
+function extractDiplomaTotal(res) {
+  const d = res?.data ?? res
+  if (d == null) return null
+  if (typeof d.total === 'number') return d.total
+  const keys = ['NOT_STORED', 'STORED', 'HANDED_OVER']
+  if (keys.some((k) => typeof d[k] === 'number')) {
+    return keys.reduce((sum, k) => sum + (typeof d[k] === 'number' ? d[k] : 0), 0)
+  }
+  return extractTotal(res)
+}
+
+// Số lượt đăng ký nhận bằng sắp tới từ stats: { ..., today, upcoming }
+function extractUpcoming(res) {
+  const d = res?.data ?? res
+  if (d == null) return null
+  if (typeof d.upcoming === 'number') return d.upcoming
+  if (typeof d.today === 'number') return d.today
+  return extractTotal(res)
+}
+
+const formatCount = (value) =>
+  typeof value === 'number' ? value.toLocaleString('vi-VN') : FALLBACK
 
 export default function DashboardOverviewPage() {
   const { user } = useAuth()
+  const [stats, setStats] = useState({
+    students: null,
+    staff: null,
+    diplomas: null,
+    registrations: null,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadStats() {
+      // Mỗi chỉ số tải độc lập — lỗi của một thẻ không ảnh hưởng thẻ khác
+      const [students, staff, diplomas, registrations] = await Promise.allSettled([
+        studentService.list({ page: 1, limit: 1 }),
+        staffService.list({ page: 1, limit: 1 }),
+        diplomaService.stats(),
+        registrationService.stats(),
+      ])
+
+      if (!isActive) return
+
+      setStats({
+        students:
+          students.status === 'fulfilled' ? extractTotal(students.value) : null,
+        staff: staff.status === 'fulfilled' ? extractTotal(staff.value) : null,
+        diplomas:
+          diplomas.status === 'fulfilled' ? extractDiplomaTotal(diplomas.value) : null,
+        registrations:
+          registrations.status === 'fulfilled'
+            ? extractUpcoming(registrations.value)
+            : null,
+      })
+      setLoading(false)
+    }
+
+    loadStats()
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   const quickStats = [
-    { label: 'Tổng số học sinh', value: '1.240', sub: 'Toàn trường', icon: Users, color: 'text-primary bg-primary-50 border-primary-200' },
-    { label: 'Cán bộ & Giáo viên', value: '88', sub: 'Đang công tác', icon: UserCheck, color: 'text-amber-700 bg-amber-50 border-amber-200' },
-    { label: 'Bằng tốt nghiệp', value: '412', sub: 'Đã lưu trữ hệ thống', icon: Award, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-    { label: 'Lịch trao bằng', value: '3 đợt', sub: 'Đang mở đăng ký', icon: Calendar, color: 'text-sky-700 bg-sky-50 border-sky-200' },
+    {
+      label: 'Tổng số học sinh',
+      value: formatCount(stats.students),
+      sub: 'Toàn trường',
+      icon: Users,
+      color: 'text-primary bg-primary-50 border-primary-200',
+    },
+    {
+      label: 'Cán bộ & Giáo viên',
+      value: formatCount(stats.staff),
+      sub: 'Đang công tác',
+      icon: UserCheck,
+      color: 'text-amber-700 bg-amber-50 border-amber-200',
+    },
+    {
+      label: 'Bằng tốt nghiệp',
+      value: formatCount(stats.diplomas),
+      sub: 'Đã lưu trữ hệ thống',
+      icon: Award,
+      color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    },
+    {
+      label: 'Đăng ký nhận bằng',
+      value: formatCount(stats.registrations),
+      sub: 'Lượt hẹn sắp tới',
+      icon: Calendar,
+      color: 'text-sky-700 bg-sky-50 border-sky-200',
+    },
   ]
 
   return (
@@ -51,7 +163,7 @@ export default function DashboardOverviewPage() {
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {quickStats.map((st, idx) => (
-          <div key={idx} className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3">
+          <div key={idx} className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3 animate-in fade-in duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500">{st.label}</span>
               <div className={`w-9 h-9 rounded-xl border flex items-center justify-center font-bold ${st.color}`}>
@@ -59,7 +171,9 @@ export default function DashboardOverviewPage() {
               </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-slate-900">{st.value}</div>
+              <div className={`text-2xl sm:text-3xl font-black text-slate-900 ${loading ? 'animate-pulse' : ''}`}>
+                {st.value}
+              </div>
               <div className="text-[11px] font-medium text-slate-500 mt-0.5">{st.sub}</div>
             </div>
           </div>

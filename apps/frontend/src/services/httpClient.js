@@ -45,6 +45,11 @@ axiosInstance.interceptors.response.use(
       if (status === 401) {
         localStorage.removeItem(APP_CONFIG.storageKeys.token)
         localStorage.removeItem(APP_CONFIG.storageKeys.user)
+
+        // Phiên hết hạn: đẩy người dùng về trang đăng nhập (tránh vòng lặp khi đang ở /login)
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
       }
 
       const errorMessage =

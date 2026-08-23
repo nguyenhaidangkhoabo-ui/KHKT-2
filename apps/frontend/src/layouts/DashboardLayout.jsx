@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import DashboardSidebar from './components/DashboardSidebar'
 import DashboardHeader from './components/DashboardHeader'
+import ToastContainer from '../components/ui/Toast'
 
 export default function DashboardLayout({ title = 'Quản trị hệ thống', menu }) {
   const [collapsed, setCollapsed] = useState(false)
@@ -32,6 +33,9 @@ export default function DashboardLayout({ title = 'Quản trị hệ thống', m
           <Outlet />
         </main>
       </div>
+
+      {/* Toast thông báo toàn cục (mount một lần duy nhất) */}
+      <ToastContainer />
     </div>
   )
 }

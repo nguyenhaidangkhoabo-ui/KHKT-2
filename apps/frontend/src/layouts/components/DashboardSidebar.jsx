@@ -1,14 +1,15 @@
 import { NavLink, Link } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  School, 
-  Users, 
-  UserCheck, 
-  Award, 
-  Inbox, 
-  CalendarDays, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Calendar,
+  CalendarDays,
+  School,
+  Layers,
+  Users,
+  UserCircle,
+  Award,
+  Inbox,
+  Settings,
   ClipboardList,
   User,
   ChevronLeft,
@@ -17,32 +18,40 @@ import {
   X
 } from 'lucide-react'
 import { APP_CONFIG } from '../../config/app.config'
+import { getMenuForRole } from '../../config/navigation'
+import { ROLE_LABELS } from '../../config/constants'
+import { useAuth } from '../../context'
 
-const DEFAULT_ADMIN_MENU = [
-  { label: 'Tổng quan Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Hồ sơ cá nhân', path: '/admin/profile', icon: User },
-  { label: 'Năm học', path: '/admin/years', icon: Calendar },
-  { label: 'Lớp học', path: '/admin/classes', icon: School },
-  { label: 'Học sinh', path: '/admin/students', icon: Users },
-  { label: 'Cán bộ / Giáo viên', path: '/admin/staff', icon: UserCheck },
-  { label: 'Bằng tốt nghiệp', path: '/admin/diplomas', icon: Award },
-  { label: 'Nhận / Trao bằng', path: '/admin/diplomas/receive', icon: Inbox },
-  { label: 'Lịch nhận bằng', path: '/admin/schedules/current', icon: CalendarDays },
-  { label: 'Cấu hình lịch', path: '/admin/schedules/next', icon: Settings },
-  { label: 'Đăng ký nhận bằng', path: '/admin/registrations', icon: ClipboardList },
-]
+// Map iconName (chuỗi từ getMenuForRole) -> icon lucide-react
+const ICON_MAP = {
+  dashboard: LayoutDashboard,
+  calendar: Calendar,
+  calendarDays: CalendarDays,
+  school: School,
+  layers: Layers,
+  users: Users,
+  userCircle: UserCircle,
+  award: Award,
+  inbox: Inbox,
+  settings: Settings,
+  clipboard: ClipboardList,
+  user: User,
+}
 
-export default function DashboardSidebar({ 
-  menu = DEFAULT_ADMIN_MENU, 
-  collapsed = false, 
+export default function DashboardSidebar({
+  menu = null,
+  collapsed = false,
   setCollapsed,
   mobileOpen = false,
   setMobileOpen
 }) {
+  const { user } = useAuth()
+  const items = menu || getMenuForRole(user?.role)
+
   return (
     <>
       {mobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-xs transition-opacity"
           onClick={() => setMobileOpen?.(false)}
         />
@@ -74,7 +83,7 @@ export default function DashboardSidebar({
             )}
           </Link>
 
-          <button 
+          <button
             onClick={() => setMobileOpen?.(false)}
             className="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
           >
@@ -85,22 +94,23 @@ export default function DashboardSidebar({
         <nav className="flex-1 overflow-y-auto p-2.5 space-y-1 custom-scrollbar">
           {!collapsed && (
             <p className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Danh mục quản lý
+              {ROLE_LABELS[user?.role] || 'Danh mục chức năng'}
             </p>
           )}
 
-          {menu.map((item) => {
-            const ItemIcon = item.icon || Sparkles
+          {items.map((item) => {
+            const ItemIcon = ICON_MAP[item.iconName || item.icon] || Sparkles
+            const path = item.to || item.path
             return (
               <NavLink
-                key={item.path}
-                to={item.path}
+                key={path}
+                to={path}
                 onClick={() => setMobileOpen?.(false)}
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) => `
                   flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 group
-                  ${isActive 
-                    ? 'bg-primary text-white shadow-primary shadow-xs font-semibold' 
+                  ${isActive
+                    ? 'bg-primary text-white shadow-primary shadow-xs font-semibold'
                     : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'}
                   ${collapsed ? 'justify-center px-0' : ''}
                 `}

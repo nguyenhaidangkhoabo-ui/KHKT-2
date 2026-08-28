@@ -54,8 +54,12 @@ const STUDENT_HEADER_MAP = {
   'dien thoai': 'phone',
   'sđt': 'phone',
   'sdt': 'phone',
+  'sđt học sinh': 'phone',
+  'sdt hoc sinh': 'phone',
   'father_phone': 'father_phone',
   'sđt bố': 'father_phone',
+  'sđt cha': 'father_phone',
+  'sdt cha': 'father_phone',
   'sdt bo': 'father_phone',
   'số điện thoại bố': 'father_phone',
   'so dien thoai bo': 'father_phone',
@@ -70,6 +74,11 @@ const STUDENT_HEADER_MAP = {
   'năm học': 'enrollment_year',
   'nam hoc': 'enrollment_year',
   'enrollment year': 'enrollment_year',
+  'academic_status': 'academic_status',
+  'trạng thái học vụ': 'academic_status',
+  'trang thai hoc vu': 'academic_status',
+  'trạng thái': 'academic_status',
+  'trang thai': 'academic_status',
 };
 
 const normalizeGender = (value) => {

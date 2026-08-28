@@ -97,11 +97,9 @@ export class StudentController {
       const xlsx = (await import('xlsx')).default;
       const exportRows = (list || []).map((s) => ({
         username: s.username,
-        // password không lưu plaintext; dùng mặc định để file round-trip import lại được
-        password: '123456',
-        student_code: s.student_code,
-        full_name: s.full_name,
-        birthdate: s.birthdate
+        'Mã học sinh': s.student_code,
+        'Họ và Tên': s.full_name,
+        'Ngày tháng năm sinh': s.birthdate
           ? (() => {
               const d = new Date(s.birthdate)
               const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -109,12 +107,13 @@ export class StudentController {
               return `${d.getFullYear()}-${mm}-${dd}`
             })()
           : '',
-        gender: s.gender,
+        'Giới tính': s.gender,
         email: s.email,
-        phone: s.phone || '',
-        father_phone: s.father_phone || '',
-        mother_phone: s.mother_phone || '',
-        enrollment_year: s.enrollment_year,
+        'SĐT học sinh': s.phone || '',
+        'SĐT cha': s.father_phone || '',
+        'SĐT mẹ': s.mother_phone || '',
+        'Năm nhập học': s.enrollment_year,
+        'Trạng thái học vụ': s.academic_status || 'ACTIVE',
       }));
       const worksheet = xlsx.utils.json_to_sheet(exportRows);
       const workbook = xlsx.utils.book_new();

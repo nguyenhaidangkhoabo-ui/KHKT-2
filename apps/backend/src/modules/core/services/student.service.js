@@ -95,13 +95,19 @@ export class StudentService {
 
   static async importFromExcel(rows) {
     const results = { success: 0, failed: 0, errors: [] };
-    for (const row of rows) {
+    for (let index = 0; index < rows.length; index++) {
+      const payload = { ...rows[index] };
       try {
-        await this.create(row);
+        if (payload.password == null || String(payload.password).trim() === '') {
+          payload.password = '123456';
+        } else {
+          payload.password = String(payload.password);
+        }
+        await this.create(payload);
         results.success++;
       } catch (err) {
         results.failed++;
-        results.errors.push({ row, message: err.message });
+        results.errors.push({ row: index + 2, message: err.message });
       }
     }
     return results;

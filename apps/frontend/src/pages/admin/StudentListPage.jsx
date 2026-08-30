@@ -10,6 +10,11 @@ import {
   Search,
   Upload,
   Download,
+  ArrowUpDown,
+  ArrowUpAZ,
+  ArrowDownZA,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import { studentService } from '../../services'
 import {
@@ -30,7 +35,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import EmptyState from '../../components/ui/EmptyState'
 import { toast } from '../../components/ui/Toast'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 200
 
 // Chuyển trạng thái học vụ hợp lệ (đồng bộ state machine phía backend).
 // GRADUATED chỉ thực hiện qua thao tác "Tốt nghiệp" riêng.
@@ -78,6 +83,9 @@ export default function StudentListPage() {
   const [filters, setFilters] = useState({ keyword: '', status: '', academic_status: '', gender: '' })
 
   const [page, setPage] = useState(1)
+
+  // Sắp xếp phía client (field: 'full_name' | 'enrollment_year' | null)
+  const [sort, setSort] = useState({ field: null, dir: 'asc' })
 
   // Chọn dòng (hàng loạt)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
@@ -130,15 +138,45 @@ export default function StudentListPage() {
 
   // Phân trang phía client (backend trả toàn bộ danh sách đã lọc)
   const totalPages = Math.max(1, Math.ceil(students.length / PAGE_SIZE))
+  // Sắp xếp phía client trước khi phân trang
+  const sortedStudents = useMemo(() => {
+    if (!sort.field) return students
+    const arr = [...students]
+    arr.sort((a, b) => {
+      const va = a[sort.field]
+      const vb = b[sort.field]
+      // Sắp xếp số (năm nhập học) và chuỗi (họ tên, hỗ trợ tiếng Việt)
+      const aNum = typeof va === 'number' ? va : Number(va)
+      const bNum = typeof vb === 'number' ? vb : Number(vb)
+      if (va != null && vb != null && !Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+        return sort.dir === 'asc' ? aNum - bNum : bNum - aNum
+      }
+      const sa = va == null ? '' : String(va)
+      const sb = vb == null ? '' : String(vb)
+      return sort.dir === 'asc' ? sa.localeCompare(sb, 'vi') : sb.localeCompare(sa, 'vi')
+    })
+    return arr
+  }, [students, sort])
   const pagedStudents = useMemo(
-    () => students.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [students, page]
+    () => sortedStudents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedStudents, page]
   )
 
   useEffect(() => {
     setPage(1)
     setSelectedIds(new Set())
   }, [filters])
+
+  // Bật sắp xếp hoặc đổi chiều (A-Z <-> Z-A) khi bấm nút
+  const toggleSort = (field) => {
+    setPage(1)
+    setSort((prev) => {
+      if (prev.field === field) {
+        return { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+      }
+      return { field, dir: 'asc' }
+    })
+  }
 
   const commitKeyword = (e) => {
     e.preventDefault()
@@ -578,6 +616,63 @@ export default function StudentListPage() {
           />
         ) : (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Sắp xếp
+                </span>
+                <button
+                  type="button"
+                  onClick={() => toggleSort('full_name')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    sort.field === 'full_name'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {(() => {
+                    const Icon =
+                      sort.field !== 'full_name'
+                        ? ArrowUpDown
+                        : sort.dir === 'asc'
+                          ? ArrowUpAZ
+                          : ArrowDownZA
+                    return <Icon className="w-4 h-4" />
+                  })()}
+                  <span>
+                    {sort.field === 'full_name' && sort.dir === 'desc'
+                      ? 'Tên (Z-A)'
+                      : 'Tên (A-Z)'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSort('enrollment_year')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    sort.field === 'enrollment_year'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {(() => {
+                    const Icon =
+                      sort.field !== 'enrollment_year'
+                        ? ArrowUpDown
+                        : sort.dir === 'asc'
+                          ? ArrowUp
+                          : ArrowDown
+                    return <Icon className="w-4 h-4" />
+                  })()}
+                  <span>Năm nhập học</span>
+                </button>
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={students.length}
+                onChange={setPage}
+              />
+            </div>
             <DataTable
               columns={columns}
               data={pagedStudents}

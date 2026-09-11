@@ -338,7 +338,7 @@ export default function ClassYearPage() {
           </Button>
           <Button variant="primary" size="sm" onClick={openCreate} disabled={!selectedYearId}>
             <Plus className="w-4 h-4" />
-            <span>Mở lớp mới</span>
+            <span>Tạo lớp mới</span>
           </Button>
         </div>
       </div>

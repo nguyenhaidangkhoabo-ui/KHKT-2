@@ -184,16 +184,18 @@ export default function MyDiplomaPage() {
         </div>
       )}
 
-      {/* Hướng dẫn nhận bằng */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-3">
-        <h2 className="text-base font-bold text-slate-900">Hướng dẫn nhận bằng</h2>
-        <ol className="space-y-2.5 text-xs text-slate-600 list-decimal list-inside">
-          <li>Kiểm tra trạng thái bằng ở phần trên — chỉ khi bằng <strong>"Đã về trường"</strong> bạn mới có thể đăng ký nhận.</li>
-          <li>Vào mục <Link to="/student/diploma/pickup" className="text-primary font-semibold hover:underline">Đăng ký nhận</Link>, chọn ngày hẹn phù hợp trong lịch phát bằng của trường.</li>
-          <li>Mang theo giấy tờ tùy thân (CCCD / thẻ học sinh) khi đến nhận bằng vào ngày đã hẹn.</li>
-          <li>Nếu cần thay đổi lịch hẹn, hãy hủy đăng ký hiện tại trong <Link to="/student/diploma/history" className="text-primary font-semibold hover:underline">Lịch sử nhận</Link> rồi đăng ký lại.</li>
-        </ol>
-      </div>
+      {/* Hướng dẫn nhận bằng — ẩn khi bằng đã được trao */}
+      {diploma?.status !== DIPLOMA_STATUS.HANDED_OVER && (
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-3">
+          <h2 className="text-base font-bold text-slate-900">Hướng dẫn nhận bằng</h2>
+          <ol className="space-y-2.5 text-xs text-slate-600 list-decimal list-inside">
+            <li>Kiểm tra trạng thái bằng ở phần trên — chỉ khi bằng <strong>"Đã về trường"</strong> bạn mới có thể đăng ký nhận.</li>
+            <li>Vào mục <Link to="/student/diploma/pickup" className="text-primary font-semibold hover:underline">Đăng ký nhận</Link>, chọn ngày hẹn phù hợp trong lịch phát bằng của trường.</li>
+            <li>Mang theo giấy tờ tùy thân (CCCD / thẻ học sinh) khi đến nhận bằng vào ngày đã hẹn.</li>
+            <li>Nếu cần thay đổi lịch hẹn, hãy hủy đăng ký hiện tại trong <Link to="/student/diploma/history" className="text-primary font-semibold hover:underline">Lịch sử nhận</Link> rồi đăng ký lại.</li>
+          </ol>
+        </div>
+      )}
     </div>
   )
 }

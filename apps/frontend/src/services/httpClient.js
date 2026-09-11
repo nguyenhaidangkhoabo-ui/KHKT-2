@@ -46,8 +46,16 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem(APP_CONFIG.storageKeys.token)
         localStorage.removeItem(APP_CONFIG.storageKeys.user)
 
-        // Phiên hết hạn: đẩy người dùng về trang đăng nhập (tránh vòng lặp khi đang ở /login)
-        if (window.location.pathname !== '/login') {
+        // Phiên hết hạn: chỉ đẩy về trang đăng nhập khi đang ở khu vực bảo vệ.
+        // Các trang công khai (trang chủ, giới thiệu, liên hệ...) vẫn hiển thị bình thường.
+        const PROTECTED_PREFIXES = ['/admin', '/student', '/staff']
+        const currentPath = window.location.pathname
+        const isProtectedArea = PROTECTED_PREFIXES.some((prefix) =>
+          currentPath.startsWith(prefix)
+        )
+
+        // Tránh vòng lặp khi đang ở /login
+        if (isProtectedArea && currentPath !== '/login') {
           window.location.href = '/login'
         }
       }

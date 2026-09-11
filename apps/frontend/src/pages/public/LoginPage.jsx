@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
+  ArrowLeft,
   Eye,
   EyeOff,
   Home,
@@ -147,6 +148,16 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-8">
+      <div>
+        <Link
+          to="/"
+          className="-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium text-slate-500 transition-colors hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Quay lại trang chủ</span>
+        </Link>
+      </div>
+
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-extrabold tracking-tight text-primary">
           Đăng nhập

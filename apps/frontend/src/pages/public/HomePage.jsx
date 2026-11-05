@@ -18,10 +18,10 @@ export default function HomePage() {
   const { user, isAuthenticated } = useAuth()
 
   const stats = [
-    { value: '65+', label: 'Năm truyền thống', sub: 'Thành lập từ năm 1959' },
-    { value: '29', label: 'Phòng học chuẩn', sub: 'Trang thiết bị hiện đại' },
-    { value: '88', label: 'Cán bộ & Giáo viên', sub: 'Tâm huyết, vững chuyên môn' },
-    { value: '1.200+', label: 'Học sinh theo học', sub: 'Khối 10, 11 và 12' },
+    { value: '67', label: 'Năm truyền thống', sub: 'Thành lập từ năm 1959' },
+    { value: '35', label: 'Phòng học'},
+    { value: '84', label: 'Cán bộ & Giáo viên', sub: 'Tâm huyết, vững chuyên môn' },
+    { value: '1.613', label: 'Học sinh theo học', sub: 'Khối 10, 11 và 12' },
   ]
 
   const highlights = [
@@ -54,7 +54,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto font-normal">
-            Ngôi trường giàu truyền thống hiếu học, nơi ươm mầm tri thức, rèn luyện nhân cách và chắp cánh ước mơ cho các thế hệ học sinh tại TP. Tân Uyên, Tỉnh Bình Dương.
+            Ngôi trường giàu truyền thống hiếu học, nơi ươm mầm tri thức, rèn luyện nhân cách và chắp cánh ước mơ cho các thế hệ học sinh tại Phường Tân Uyên, TP.Hồ Chí Minh.
           </p>
 
           {/* Subtle & Elegant Logged-In User Card */}
@@ -147,7 +147,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             <div className="space-y-1 max-w-xl">
               <h3 className="text-lg sm:text-xl font-bold text-slate-900">
-                Hành trình 65 năm xây dựng & phát triển (1959 – 2024)
+                Hành trình 67 năm xây dựng & phát triển (1959 – 2026)
               </h3>
               <p className="text-xs sm:text-sm text-slate-500">
                 Tìm hiểu chi tiết các mốc son lịch sử, tiểu sử Thi tướng Huỳnh Văn Nghệ và bảng vàng thành tích.

@@ -39,9 +39,9 @@ export default function AboutPage() {
       content: 'Trường vinh dự được mang tên nhà thơ, chiến sĩ, vị tướng tài ba của vùng đất Tân Uyên – Chiến khu Đ: Thi tướng Huỳnh Văn Nghệ.',
     },
     {
-      year: '2024',
-      title: 'Kỷ niệm 65 năm xây dựng và phát triển (1959 – 2024)',
-      content: 'Trường long trọng tổ chức lễ kỷ niệm 65 năm ngày thành lập, ghi dấu chặng đường vẻ vang với Huân chương Lao động hạng Ba và trường đạt Chuẩn Quốc gia.',
+      year: '2026',
+      title: 'Kỷ niệm 67 năm xây dựng và phát triển (1959 – 2026)',
+      content: 'Trường long trọng tổ chức lễ kỷ niệm 67 năm ngày thành lập, ghi dấu chặng đường vẻ vang với Huân chương Lao động hạng Ba và trường đạt Chuẩn Quốc gia.',
     },
   ]
 
@@ -56,10 +56,10 @@ export default function AboutPage() {
       <div className="text-center space-y-3">
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
           Trường THPT Huỳnh Văn Nghệ <br />
-          <span className="text-primary font-bold text-xl sm:text-2xl">Hành trình 65 năm xây dựng và phát triển (1959 – 2024)</span>
+          <span className="text-primary font-bold text-xl sm:text-2xl">Hành trình 67 năm xây dựng và phát triển (1959 – 2026)</span>
         </h1>
         <p className="text-sm sm:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Trường THPT Huỳnh Văn Nghệ là một trong những ngôi trường có bề dày lịch sử lâu đời tại tỉnh Bình Dương, với 65 năm hình thành và phát triển gắn liền với vùng đất Tân Uyên anh hùng.
+          Trường THPT Huỳnh Văn Nghệ là một trong những ngôi trường có bề dày lịch sử lâu đời tại tỉnh Bình Dương, với 67 năm hình thành và phát triển gắn liền với vùng đất Tân Uyên anh hùng.
         </p>
       </div>
 
@@ -148,15 +148,15 @@ export default function AboutPage() {
           <ul className="space-y-2.5 text-xs sm:text-sm text-slate-700">
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span><strong>29 Lớp học</strong> với trang thiết bị dạy học hiện đại</span>
+              <span><strong>35 Lớp học</strong> với trang thiết bị dạy học hiện đại</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span><strong>88 Cán bộ - Giáo viên - Nhân viên</strong> tận tụy</span>
+              <span><strong>81 CBQL - GV - NV</strong> tận tụy</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Trong đó có <strong>8 Thạc sĩ</strong> và <strong>69 Cử nhân</strong></span>
+              <span>Trong đó có <strong>18 Thạc sĩ</strong> </span>
             </li>
           </ul>
         </div>

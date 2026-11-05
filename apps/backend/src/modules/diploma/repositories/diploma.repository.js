@@ -1,7 +1,7 @@
 import { Diploma } from '../entities/diploma.entity.js';
 
 const STUDENT_POPULATE = { path: 'student_id', select: 'student_code full_name academic_status' };
-const YEAR_POPULATE = { path: 'graduation_academic_year_id', select: 'name start_year end_year' };
+const YEAR_POPULATE = { path: 'graduation_academic_year_id', select: 'start_year end_year' };
 
 export class DiplomaRepository {
   static async startSession() {
@@ -89,7 +89,7 @@ export class DiplomaRepository {
     static async findByStudentIdPopulated(studentId) {
     return await Diploma.findOne({ student_id: studentId })
       .populate({ path: 'student_id', select: 'student_code full_name academic_status' })
-      .populate({ path: 'graduation_academic_year_id', select: 'name start_year end_year' });
+      .populate({ path: 'graduation_academic_year_id', select: 'start_year end_year' });
   }
 
   static async countAll() {

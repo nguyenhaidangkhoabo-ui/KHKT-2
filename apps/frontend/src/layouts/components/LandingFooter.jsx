@@ -21,7 +21,7 @@ export default function LandingFooter() {
                   {APP_CONFIG.schoolName}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Hành trình 65 năm xây dựng và phát triển
+                  Hành trình 67 năm xây dựng và phát triển
                 </p>
               </div>
             </div>
@@ -72,7 +72,7 @@ export default function LandingFooter() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <p>{APP_CONFIG.schoolName} — Tân Uyên, Tỉnh Bình Dương</p>
+          <p>{APP_CONFIG.schoolName} — Phường Tân Uyên, TP. Hồ Chí Minh</p>
           <p>{APP_CONFIG.appName}</p>
         </div>
       </div>

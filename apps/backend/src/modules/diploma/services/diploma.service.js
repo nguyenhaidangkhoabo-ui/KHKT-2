@@ -5,6 +5,7 @@ import { DiplomaStatus, DIPLOMA_STATUS_TRANSITIONS } from '../enums.js';
 import { DiplomaRepository } from '../repositories/diploma.repository.js';
 import { PickupRegistrationRepository } from '../repositories/pickup-registration.repository.js';
 
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
 async function isGrade12InYear(studentId, graduationAcademicYearId) {
   const records = await StudentClassAcademicYear.find({ student_id: studentId })
@@ -23,12 +24,17 @@ export class DiplomaService {
   static async getMe(studentId) {
     const diploma = await DiplomaRepository.findByStudentIdPopulated(studentId);
     if (!diploma) return null;
+    const year = diploma.graduation_academic_year_id;
+    const graduationAcademicYear =
+      year && (year.start_year != null || year.end_year != null)
+        ? `${year.start_year ?? ''} - ${year.end_year ?? ''}`
+        : null;
     return {
       _id: diploma._id,
       student_id: diploma.student_id?._id,
       student_code: diploma.student_id?.student_code,
       full_name: diploma.student_id?.full_name,
-      graduation_academic_year: diploma.graduation_academic_year_id?.name || diploma.graduation_academic_year_id?._id,
+      graduation_academic_year: graduationAcademicYear,
       diploma_number: diploma.diploma_number,
       status: diploma.status,
       updated_at: diploma.updated_at
@@ -113,14 +119,34 @@ export class DiplomaService {
   
   static async bulkCreate(data) {
     let students;
+    let notFound = [];
 
     if (Array.isArray(data.student_ids) && data.student_ids.length > 0) {
+      // Chấp nhận cả ObjectId (_id) lẫn mã học sinh (student_code).
+      const objectIds = [];
+      const studentCodes = [];
+      for (const raw of data.student_ids) {
+        const key = String(raw).trim();
+        if (!key) continue;
+        if (OBJECT_ID_REGEX.test(key)) objectIds.push(key);
+        else studentCodes.push(key);
+      }
+
       students = await StudentAccount.find({
-        _id: { $in: data.student_ids },
-        academic_status: AcademicStatus.GRADUATED
+        academic_status: AcademicStatus.GRADUATED,
+        $or: [
+          { _id: { $in: objectIds } },
+          { student_code: { $in: studentCodes } }
+        ]
       })
-        .select('_id')
+        .select('_id student_code')
         .lean();
+
+      const matchedIds = new Set(students.map((s) => String(s._id)));
+      const matchedCodes = new Set(students.map((s) => s.student_code));
+      notFound = data.student_ids
+        .map((raw) => String(raw).trim())
+        .filter((key) => key && !matchedIds.has(key) && !matchedCodes.has(key));
     } else if (data.academic_year_id) {
       
       students = await StudentAccount.find({ academic_status: AcademicStatus.GRADUATED })
@@ -155,10 +181,19 @@ export class DiplomaService {
       await DiplomaRepository.bulkCreate(toCreate);
     }
 
+    const skippedCount = students.length - toCreate.length;
+    let message = `Đã tạo ${toCreate.length} bằng tốt nghiệp, bỏ qua ${skippedCount} học sinh đã có bằng.`;
+    if (notFound.length > 0) {
+      const preview = notFound.slice(0, 5).join(', ');
+      const more = notFound.length > 5 ? '...' : '';
+      message += ` Không tìm thấy ${notFound.length} học sinh đã tốt nghiệp: ${preview}${more}`;
+    }
+
     return {
       created_count: toCreate.length,
-      skipped_count: students.length - toCreate.length,
-      message: `Đã tạo ${toCreate.length} bằng tốt nghiệp, bỏ qua ${students.length - toCreate.length} học sinh đã có bằng.`
+      skipped_count: skippedCount,
+      not_found: notFound,
+      message
     };
   }
 

@@ -329,14 +329,7 @@ export default function LoginPage() {
           Liên hệ quản trị viên nếu bạn quên mật khẩu hoặc chưa có tài khoản.
         </p>
 
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        >
-          <Home className="h-4 w-4" aria-hidden="true" />
-          <span>Quay về trang chủ</span>
-        </button>
+        
       </div>
     </div>
   )

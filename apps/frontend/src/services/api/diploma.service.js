@@ -22,7 +22,7 @@ export const diplomaService = {
   },
 
   // Tạo hàng loạt — payload: { academic_year_id } (toàn bộ HS đã tốt nghiệp)
-  // hoặc { academic_year_id, student_ids: [] }
+  // hoặc { academic_year_id, student_ids: [] } (mỗi phần tử là ObjectId hoặc mã học sinh)
   bulkCreate: async (data) => {
     return await httpClient.post('/diploma/diplomas/bulk-create', data)
   },

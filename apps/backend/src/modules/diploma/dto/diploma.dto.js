@@ -14,8 +14,14 @@ export const validateCreateDiplomaInput = (data) => {
 export const validateBulkCreateInput = (data) => {
   const errors = [];
   if (Array.isArray(data.student_ids)) {
-    if (data.student_ids.length === 0) errors.push('student_ids không được rỗng.');
-    else if (!data.student_ids.every(isValidObjectId)) errors.push('student_ids chứa id không hợp lệ.');
+    if (data.student_ids.length === 0) {
+      errors.push('student_ids không được rỗng.');
+    } else if (
+      // Mỗi phần tử có thể là ObjectId (24 hex) hoặc mã học sinh (student_code).
+      !data.student_ids.every((id) => typeof id === 'string' && id.trim().length > 0)
+    ) {
+      errors.push('student_ids chứa giá trị không hợp lệ (cần ObjectId hoặc mã học sinh).');
+    }
   } else if (!data.academic_year_id || !isValidObjectId(data.academic_year_id)) {
     errors.push('Cần truyền academic_year_id hợp lệ (hoặc mảng student_ids).');
   }

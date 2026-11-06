@@ -8,6 +8,11 @@ export class ClassAcademicYearRepository {
       .populate('homeroom_staff_id', '-password_hash');
   }
 
+  static async findByAcademicYear(academicYearId) {
+    return await ClassAcademicYear.find({ academic_year_id: academicYearId })
+      .populate('class_id');
+  }
+
   static async findByAcademicYearAndClass(academicYearId, classId) {
     return await ClassAcademicYear.findOne({
       academic_year_id: academicYearId,

@@ -65,6 +65,31 @@ export class StudentClassAcademicYearRepository {
     return result;
   }
 
+  // Đếm sỉ số hiện tại của nhiều lớp-năm học. Trả về Map<classAcademicYearId, count>.
+  static async countByClassAcademicYearIds(classAcademicYearIds) {
+    if (!classAcademicYearIds.length) return new Map();
+
+    const rows = await StudentClassAcademicYear.aggregate([
+      { $match: { class_academic_year_id: { $in: classAcademicYearIds } } },
+      { $group: { _id: '$class_academic_year_id', count: { $sum: 1 } } }
+    ]);
+
+    return new Map(rows.map((row) => [String(row._id), row.count]));
+  }
+
+  // Liên kết học sinh-lớp của nhiều lớp-năm học (dùng khi xếp học sinh hàng loạt).
+  static async findLinksByClassAcademicYearIds(classAcademicYearIds) {
+    if (!classAcademicYearIds.length) return [];
+    return await StudentClassAcademicYear.find({
+      class_academic_year_id: { $in: classAcademicYearIds }
+    }).select('class_academic_year_id student_id');
+  }
+
+  static async bulkAddStudentLinks(docs) {
+    if (!docs.length) return [];
+    return await StudentClassAcademicYear.insertMany(docs);
+  }
+
   static async findAcademicHistoryByStudent(studentId) {
     return await StudentClassAcademicYear.find({ student_id: studentId })
       .populate({

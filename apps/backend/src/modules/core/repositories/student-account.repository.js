@@ -33,6 +33,15 @@ export class StudentAccountRepository {
     return await StudentAccount.find(query).select('-password_hash').sort({ created_at: -1 });
   }
 
+  // Học sinh đang học và chưa thuộc lớp nào trong danh sách loại trừ.
+  static async findActiveExcludingIds(excludeIds = []) {
+    const query = { academic_status: AcademicStatus.ACTIVE };
+    if (excludeIds.length) query._id = { $nin: excludeIds };
+    return await StudentAccount.find(query)
+      .select('-password_hash')
+      .sort({ student_code: 1 });
+  }
+
   static async findGraduated() {
     return await StudentAccount.find({ academic_status: AcademicStatus.GRADUATED })
       .select('-password_hash')

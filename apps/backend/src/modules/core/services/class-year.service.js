@@ -31,7 +31,28 @@ export class ClassYearService {
     if (!classAY) {
       throw new AppError('Không tìm thấy lớp-năm học.', HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
-    return await ClassAcademicYearRepository.assignHomeroomTeacher(classAcademicYearId, staffId);
+
+    // Một giáo viên chỉ chủ nhiệm một lớp trong cùng một năm học.
+    if (staffId) {
+      const academicYearId = classAY.academic_year_id?._id || classAY.academic_year_id;
+      const conflict = await ClassAcademicYearRepository.findByAcademicYearAndHomeroom(
+        academicYearId,
+        staffId
+      );
+      if (conflict && String(conflict._id) !== String(classAcademicYearId)) {
+        throw new AppError(
+          `Giáo viên đã chủ nhiệm lớp ${conflict.class_id?.name || 'khác'} trong năm học này.`,
+          HttpStatus.CONFLICT,
+          ErrorCode.VALIDATION_ERROR
+        );
+      }
+    }
+
+    // staffId rỗng/null = hủy phân công.
+    return await ClassAcademicYearRepository.assignHomeroomTeacher(
+      classAcademicYearId,
+      staffId || null
+    );
   }
 
   static async delete(id) {

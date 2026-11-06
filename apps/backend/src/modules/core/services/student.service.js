@@ -2,7 +2,11 @@ import bcrypt from 'bcrypt';
 import { AcademicStatus } from '../enums.js';
 import { StudentAccountRepository } from '../repositories/student-account.repository.js';
 import { StudentClassAcademicYearRepository } from '../repositories/student-class-academic-year.repository.js';
+import { AcademicYearRepository } from '../repositories/academic-year.repository.js';
 import { AppError, HttpStatus, ErrorCode } from '../../../core/error.js';
+
+// Giá trị đặc biệt cho bộ lọc "Chưa có lớp".
+const NO_CLASS_FILTER = '__none__';
 
 const VALID_TRANSITIONS = {
   [AcademicStatus.ACTIVE]: [
@@ -23,7 +27,48 @@ const VALID_TRANSITIONS = {
 
 export class StudentService {
   static async getAll(filters = {}) {
-    return await StudentAccountRepository.findAll(filters);
+    const students = await StudentAccountRepository.findAll(filters);
+
+    // Lớp hiện tại: năm học đang được đánh dấu is_current, nếu chưa có thì lấy năm gần nhất.
+    const academicYear =
+      (await AcademicYearRepository.findCurrent()) ||
+      (await AcademicYearRepository.findAll())[0];
+
+    if (!academicYear) {
+      const list = students.map((student) => ({
+        ...student.toObject(),
+        class_id: null,
+        class_name: null
+      }));
+      if (!filters.class_id || String(filters.class_id) === NO_CLASS_FILTER) return list;
+      return [];
+    }
+
+    const classByStudent = await StudentClassAcademicYearRepository.findCurrentClassByStudentIds(
+      students.map((student) => student._id),
+      academicYear._id
+    );
+
+    let list = students.map((student) => {
+      const classDoc = classByStudent.get(String(student._id));
+      return {
+        ...student.toObject(),
+        class_id: classDoc?._id || null,
+        class_name: classDoc?.name || null
+      };
+    });
+
+    if (filters.class_id) {
+      if (String(filters.class_id) === NO_CLASS_FILTER) {
+        list = list.filter((student) => !student.class_id);
+      } else {
+        list = list.filter(
+          (student) => String(student.class_id) === String(filters.class_id)
+        );
+      }
+    }
+
+    return list;
   }
 
   static async getById(id) {

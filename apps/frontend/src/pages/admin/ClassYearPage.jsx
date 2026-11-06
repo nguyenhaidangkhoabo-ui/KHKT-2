@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { CalendarDays, Plus, Trash2, UserCheck, RefreshCw, Upload } from 'lucide-react'
+import { CalendarDays, Plus, Trash2, UserCheck, UserMinus, RefreshCw, RotateCcw, Upload, WandSparkles } from 'lucide-react'
 import { classYearService, classService, yearService, staffService, studentClassService } from '../../services'
 import { GRADE_LABELS } from '../../config/constants'
 import Button from '../../components/ui/Button'
@@ -28,6 +28,14 @@ export default function ClassYearPage() {
   const [homeroomStaffId, setHomeroomStaffId] = useState('')
   const [homeroomError, setHomeroomError] = useState('')
   const [assigning, setAssigning] = useState(false)
+
+  // Phân công thông minh / hủy / đặt lại phân công
+  const [autoAssignConfirm, setAutoAssignConfirm] = useState(false)
+  const [autoAssigning, setAutoAssigning] = useState(false)
+  const [unassignTarget, setUnassignTarget] = useState(null)
+  const [unassigning, setUnassigning] = useState(false)
+  const [resetConfirm, setResetConfirm] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   const [classImportTarget, setClassImportTarget] = useState(null)
   const [importingClass, setImportingClass] = useState(false)
@@ -119,6 +127,42 @@ export default function ClassYearPage() {
     return classes.filter((c) => !usedIds.has(String(c._id)))
   }, [rows, classes, selectedYearId])
 
+  // Giáo viên đã chủ nhiệm một lớp trong năm đang chọn
+  const assignedStaffIds = useMemo(() => {
+    const ids = new Set()
+    filteredRows.forEach((row) => {
+      if (!row.homeroom_staff_id) return
+      ids.add(String(row.homeroom_staff_id._id || row.homeroom_staff_id))
+    })
+    return ids
+  }, [filteredRows])
+
+  // Giáo viên còn trống (chưa chủ nhiệm lớp nào trong năm đang chọn)
+  const availableHomeroomStaff = useMemo(
+    () => staffList.filter((s) => !assignedStaffIds.has(String(s._id))),
+    [staffList, assignedStaffIds]
+  )
+
+  // Trong modal sửa: vẫn giữ giáo viên hiện tại của chính lớp đó trong danh sách chọn
+  const homeroomStaffOptions = useMemo(() => {
+    const currentStaffId = String(
+      homeroomTarget?.homeroom_staff_id?._id || homeroomTarget?.homeroom_staff_id || ''
+    )
+    return staffList.filter(
+      (s) => !assignedStaffIds.has(String(s._id)) || String(s._id) === currentStaffId
+    )
+  }, [staffList, assignedStaffIds, homeroomTarget])
+
+  const assignedRows = useMemo(
+    () => filteredRows.filter((row) => row.homeroom_staff_id),
+    [filteredRows]
+  )
+
+  const unassignedRows = useMemo(
+    () => filteredRows.filter((row) => !row.homeroom_staff_id),
+    [filteredRows]
+  )
+
   const openCreate = () => {
     setCreateForm({ academic_year_id: selectedYearId, class_id: '' })
     setFormError('')
@@ -176,6 +220,105 @@ export default function ClassYearPage() {
       setHomeroomError(err.message || 'Phân công chủ nhiệm thất bại.')
     } finally {
       setAssigning(false)
+    }
+  }
+
+  // Phân công thông minh: lấp các lớp chưa có chủ nhiệm bằng giáo viên còn trống.
+  // Không đủ giáo viên thì xếp tối đa có thể rồi báo số lớp còn trống.
+  const handleAutoAssign = async () => {
+    const targets = [...unassignedRows].sort((a, b) =>
+      (a.class_id?.name || '').localeCompare(b.class_id?.name || '', 'vi')
+    )
+    const teachers = [...availableHomeroomStaff].sort((a, b) =>
+      (a.full_name || '').localeCompare(b.full_name || '', 'vi')
+    )
+
+    if (targets.length === 0) {
+      setAutoAssignConfirm(false)
+      toast.info('Tất cả các lớp trong năm học này đã có giáo viên chủ nhiệm.')
+      return
+    }
+
+    const pairCount = Math.min(targets.length, teachers.length)
+    try {
+      setAutoAssigning(true)
+      let assigned = 0
+      let failed = 0
+      for (let i = 0; i < pairCount; i++) {
+        try {
+          await classYearService.assignHomeroom(targets[i]._id, {
+            homeroom_staff_id: teachers[i]._id,
+          })
+          assigned++
+        } catch {
+          failed++
+        }
+      }
+      setAutoAssignConfirm(false)
+      await loadClassYears()
+
+      const remaining = targets.length - assigned
+      if (failed > 0) {
+        toast.error(
+          `Đã phân công ${assigned} lớp, ${failed} lớp phân công thất bại. Còn ${remaining} lớp chưa có chủ nhiệm.`
+        )
+      } else if (remaining > 0) {
+        toast.info(
+          `Đã phân công ${assigned} lớp. Còn ${remaining} lớp chưa có giáo viên vì không đủ giáo viên.`
+        )
+      } else {
+        toast.success(`Đã phân công giáo viên chủ nhiệm cho ${assigned} lớp.`)
+      }
+    } finally {
+      setAutoAssigning(false)
+    }
+  }
+
+  const handleUnassignHomeroom = async () => {
+    if (!unassignTarget) return
+    try {
+      setUnassigning(true)
+      await classYearService.assignHomeroom(unassignTarget._id, {
+        homeroom_staff_id: null,
+      })
+      toast.success('Đã hủy phân công giáo viên chủ nhiệm.')
+      setUnassignTarget(null)
+      await loadClassYears()
+    } catch (err) {
+      toast.error(err.message || 'Hủy phân công thất bại.')
+    } finally {
+      setUnassigning(false)
+    }
+  }
+
+  // Đặt lại toàn bộ phân công của năm đang chọn để phân công lại từ đầu.
+  const handleResetHomeroom = async () => {
+    const targets = [...assignedRows]
+    if (targets.length === 0) {
+      setResetConfirm(false)
+      toast.info('Không có phân công nào cần đặt lại trong năm học này.')
+      return
+    }
+    try {
+      setResetting(true)
+      let cleared = 0
+      for (const row of targets) {
+        try {
+          await classYearService.assignHomeroom(row._id, { homeroom_staff_id: null })
+          cleared++
+        } catch {
+          // Tiếp tục các lớp còn lại, báo kết quả cuối cùng.
+        }
+      }
+      setResetConfirm(false)
+      await loadClassYears()
+      if (cleared === targets.length) {
+        toast.success(`Đã đặt lại phân công cho ${cleared} lớp.`)
+      } else {
+        toast.error(`Đã đặt lại ${cleared}/${targets.length} lớp. Vui lòng thử lại.`)
+      }
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -298,6 +441,16 @@ export default function ClassYearPage() {
           >
             <UserCheck className="w-4 h-4" />
           </button>
+          {row.homeroom_staff_id && (
+            <button
+              type="button"
+              onClick={() => setUnassignTarget(row)}
+              title="Hủy phân công chủ nhiệm"
+              className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+            >
+              <UserMinus className="w-4 h-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setDeleteTarget(row)}
@@ -324,7 +477,7 @@ export default function ClassYearPage() {
             Mở lớp và phân công giáo viên chủ nhiệm cho từng năm học.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <input
             ref={fileInputRef}
             type="file"
@@ -332,6 +485,24 @@ export default function ClassYearPage() {
             onChange={handleImportClass}
             className="hidden"
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAutoAssignConfirm(true)}
+            disabled={!selectedYearId || autoAssigning}
+          >
+            <WandSparkles className="w-4 h-4" />
+            <span>Phân công thông minh</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setResetConfirm(true)}
+            disabled={!selectedYearId || resetting}
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Đặt lại phân công</span>
+          </Button>
           <Button variant="outline" size="sm" onClick={loadClassYears}>
             <RefreshCw className="w-4 h-4" />
             <span>Làm mới</span>
@@ -494,12 +665,15 @@ export default function ClassYearPage() {
               className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
             >
               <option value="">— Chọn cán bộ / giáo viên —</option>
-              {staffList.map((s) => (
+              {homeroomStaffOptions.map((s) => (
                 <option key={s._id} value={s._id}>
                   {s.full_name} ({s.staff_code})
                 </option>
               ))}
             </select>
+            <p className="mt-1.5 text-[11px] text-slate-400">
+              Chỉ hiển thị giáo viên chưa chủ nhiệm lớp khác trong năm học này.
+            </p>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -523,6 +697,41 @@ export default function ClassYearPage() {
         title="Xóa lớp-năm học"
         message={`Bạn chắc chắn muốn xóa lớp "${deleteTarget?.class_id?.name}" khỏi năm học? Chỉ có thể xóa lớp chưa có học sinh.`}
         confirmText="Xóa"
+      />
+
+      {/* Xác nhận phân công thông minh */}
+      <ConfirmDialog
+        isOpen={autoAssignConfirm}
+        onClose={() => setAutoAssignConfirm(false)}
+        onConfirm={handleAutoAssign}
+        loading={autoAssigning}
+        title="Phân công thông minh"
+        message={`Tự động phân công giáo viên chưa chủ nhiệm cho ${unassignedRows.length} lớp chưa có chủ nhiệm trong năm học đang chọn. Nếu không đủ giáo viên, các lớp còn lại sẽ được báo lại. Tiếp tục?`}
+        confirmText="Phân công"
+      />
+
+      {/* Xác nhận hủy phân công một lớp */}
+      <ConfirmDialog
+        isOpen={Boolean(unassignTarget)}
+        onClose={() => setUnassignTarget(null)}
+        onConfirm={handleUnassignHomeroom}
+        danger
+        loading={unassigning}
+        title="Hủy phân công chủ nhiệm"
+        message={`Hủy phân công giáo viên ${unassignTarget?.homeroom_staff_id?.full_name || ''} khỏi lớp "${unassignTarget?.class_id?.name || ''}"?`}
+        confirmText="Hủy phân công"
+      />
+
+      {/* Xác nhận đặt lại toàn bộ phân công */}
+      <ConfirmDialog
+        isOpen={resetConfirm}
+        onClose={() => setResetConfirm(false)}
+        onConfirm={handleResetHomeroom}
+        danger
+        loading={resetting}
+        title="Đặt lại toàn bộ phân công"
+        message={`Xóa giáo viên chủ nhiệm của tất cả ${assignedRows.length} lớp trong năm học đang chọn để phân công lại?`}
+        confirmText="Đặt lại"
       />
     </div>
   )

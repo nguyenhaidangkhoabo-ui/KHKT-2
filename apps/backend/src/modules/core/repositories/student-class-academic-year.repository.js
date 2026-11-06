@@ -1,4 +1,5 @@
 import { StudentClassAcademicYear } from '../entities/student-class-academic-year.entity.js';
+import { ClassAcademicYear } from '../entities/class-academic-year.entity.js';
 
 export class StudentClassAcademicYearRepository {
   static async findStudentsByClassAcademicYear(classAcademicYearId) {
@@ -37,6 +38,31 @@ export class StudentClassAcademicYearRepository {
       class_academic_year_id: classAcademicYearId,
       student_id: studentId
     });
+  }
+
+  // Lớp hiện tại của từng học sinh trong một năm học (dùng cho danh sách học sinh).
+  // Trả về Map<studentId, classDocument>.
+  static async findCurrentClassByStudentIds(studentIds, academicYearId) {
+    if (!studentIds.length) return new Map();
+
+    const classAcademicYears = await ClassAcademicYear.find({ academic_year_id: academicYearId })
+      .populate('class_id');
+    const classById = new Map(
+      classAcademicYears.map((classAY) => [String(classAY._id), classAY.class_id])
+    );
+    if (classById.size === 0) return new Map();
+
+    const links = await StudentClassAcademicYear.find({
+      student_id: { $in: studentIds },
+      class_academic_year_id: { $in: classAcademicYears.map((classAY) => classAY._id) }
+    });
+
+    const result = new Map();
+    for (const link of links) {
+      const classDoc = classById.get(String(link.class_academic_year_id));
+      if (classDoc) result.set(String(link.student_id), classDoc);
+    }
+    return result;
   }
 
   static async findAcademicHistoryByStudent(studentId) {

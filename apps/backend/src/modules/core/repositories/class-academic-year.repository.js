@@ -15,6 +15,13 @@ export class ClassAcademicYearRepository {
     });
   }
 
+  static async findByAcademicYearAndHomeroom(academicYearId, staffId) {
+    return await ClassAcademicYear.findOne({
+      academic_year_id: academicYearId,
+      homeroom_staff_id: staffId
+    }).populate('class_id');
+  }
+
   static async findById(id) {
     return await ClassAcademicYear.findById(id)
       .populate('academic_year_id')

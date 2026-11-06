@@ -16,7 +16,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
-import { studentService } from '../../services'
+import { studentService, classService } from '../../services'
 import {
   USER_STATUS,
   USER_STATUS_LABELS,
@@ -80,11 +80,14 @@ export default function StudentListPage() {
 
   // Bộ lọc: input tạm + giá trị đã chốt (commit bằng Enter / nút Tìm kiếm)
   const [keywordInput, setKeywordInput] = useState('')
-  const [filters, setFilters] = useState({ keyword: '', status: '', academic_status: '', gender: '' })
+  const [filters, setFilters] = useState({ keyword: '', status: '', academic_status: '', gender: '', class_id: '' })
+
+  // Danh mục lớp dùng cho bộ lọc theo lớp
+  const [classOptions, setClassOptions] = useState([])
 
   const [page, setPage] = useState(1)
 
-  // Sắp xếp phía client (field: 'full_name' | 'enrollment_year' | null)
+  // Sắp xếp phía client (field: 'full_name' | 'class_name' | 'enrollment_year' | null)
   const [sort, setSort] = useState({ field: null, dir: 'asc' })
 
   // Chọn dòng (hàng loạt)
@@ -121,6 +124,7 @@ export default function StudentListPage() {
       if (filters.status) params.status = filters.status
       if (filters.academic_status) params.academic_status = filters.academic_status
       if (filters.gender) params.gender = filters.gender
+      if (filters.class_id) params.class_id = filters.class_id
 
       const res = await studentService.list(params)
       const list = Array.isArray(res?.data) ? res.data : []
@@ -136,6 +140,22 @@ export default function StudentListPage() {
     loadStudents()
   }, [loadStudents])
 
+  // Tải danh mục lớp cho bộ lọc (không chặn tải danh sách học sinh nếu lỗi)
+  useEffect(() => {
+    let isActive = true
+    classService
+      .list()
+      .then((res) => {
+        if (isActive) setClassOptions(Array.isArray(res?.data) ? res.data : [])
+      })
+      .catch(() => {
+        if (isActive) setClassOptions([])
+      })
+    return () => {
+      isActive = false
+    }
+  }, [])
+
   // Phân trang phía client (backend trả toàn bộ danh sách đã lọc)
   const totalPages = Math.max(1, Math.ceil(students.length / PAGE_SIZE))
   // Sắp xếp phía client trước khi phân trang
@@ -143,6 +163,15 @@ export default function StudentListPage() {
     if (!sort.field) return students
     const arr = [...students]
     arr.sort((a, b) => {
+      // Sắp xếp theo lớp: "Chưa có lớp" luôn nằm cuối.
+      if (sort.field === 'class_name') {
+        const sa = a.class_name || ''
+        const sb = b.class_name || ''
+        if (!sa && !sb) return 0
+        if (!sa) return 1
+        if (!sb) return -1
+        return sort.dir === 'asc' ? sa.localeCompare(sb, 'vi') : sb.localeCompare(sa, 'vi')
+      }
       const va = a[sort.field]
       const vb = b[sort.field]
       // Sắp xếp số (năm nhập học) và chuỗi (họ tên, hỗ trợ tiếng Việt)
@@ -186,7 +215,7 @@ export default function StudentListPage() {
 
   const resetFilters = () => {
     setKeywordInput('')
-    setFilters({ keyword: '', status: '', academic_status: '', gender: '' })
+    setFilters({ keyword: '', status: '', academic_status: '', gender: '', class_id: '' })
     setPage(1)
   }
 
@@ -366,6 +395,7 @@ export default function StudentListPage() {
       if (filters.status) params.status = filters.status
       if (filters.academic_status) params.academic_status = filters.academic_status
       if (filters.gender) params.gender = filters.gender
+      if (filters.class_id) params.class_id = filters.class_id
 
       const blob = await studentService.exportExcel(params)
       downloadBlob(blob, 'danh-sach-hoc-sinh.xlsx')
@@ -389,6 +419,11 @@ export default function StudentListPage() {
       key: 'full_name',
       header: 'Họ và tên',
       render: (row) => <span className="font-semibold text-slate-800">{row.full_name}</span>,
+    },
+    {
+      key: 'class_name',
+      header: 'Lớp',
+      render: (row) => <Badge color="amber">{row.class_name || 'Chưa có lớp'}</Badge>,
     },
     {
       key: 'gender',
@@ -519,6 +554,23 @@ export default function StudentListPage() {
           </div>
 
           <div className="min-w-[150px]">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Lớp</label>
+            <select
+              value={filters.class_id}
+              onChange={(e) => setFilters((f) => ({ ...f, class_id: e.target.value }))}
+              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+            >
+              <option value="">Tất cả</option>
+              <option value="__none__">Chưa có lớp</option>
+              {classOptions.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="min-w-[150px]">
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">Trạng thái tài khoản</label>
             <select
               value={filters.status}
@@ -643,6 +695,30 @@ export default function StudentListPage() {
                     {sort.field === 'full_name' && sort.dir === 'desc'
                       ? 'Tên (Z-A)'
                       : 'Tên (A-Z)'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSort('class_name')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    sort.field === 'class_name'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {(() => {
+                    const Icon =
+                      sort.field !== 'class_name'
+                        ? ArrowUpDown
+                        : sort.dir === 'asc'
+                          ? ArrowUpAZ
+                          : ArrowDownZA
+                    return <Icon className="w-4 h-4" />
+                  })()}
+                  <span>
+                    {sort.field === 'class_name' && sort.dir === 'desc'
+                      ? 'Lớp (Z-A)'
+                      : 'Lớp (A-Z)'}
                   </span>
                 </button>
                 <button

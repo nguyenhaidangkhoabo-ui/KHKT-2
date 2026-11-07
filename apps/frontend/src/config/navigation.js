@@ -54,7 +54,7 @@ const STUDENT_MENU = [
 
 const TEACHER_MENU = [
   { label: 'Hồ sơ', to: '/staff/profile', iconName: 'user' },
-  { label: 'Học sinh chủ nhiệm', to: '/staff/class/students', iconName: 'school' },
+  { label: 'Học sinh chủ nhim', to: '/staff/class/students', iconName: 'school' },
   { label: 'Văn bằng lớp', to: '/staff/class/diplomas', iconName: 'award' },
 ]
 

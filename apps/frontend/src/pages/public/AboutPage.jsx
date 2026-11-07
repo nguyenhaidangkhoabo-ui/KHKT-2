@@ -59,7 +59,7 @@ export default function AboutPage() {
           <span className="text-primary font-bold text-xl sm:text-2xl">Hành trình 67 năm xây dựng và phát triển (1959 – 2026)</span>
         </h1>
         <p className="text-sm sm:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Trường THPT Huỳnh Văn Nghệ là một trong những ngôi trường có bề dày lịch sử lâu đời tại tỉnh Bình Dương, với 67 năm hình thành và phát triển gắn liền với vùng đất Tân Uyên anh hùng.
+          Trường THPT Huỳnh Văn Nghệ là một trong những ngôi trường có bề dày lịch sử lâu đời tại Tp. Hồ Chí Minh, với 67 năm hình thành và phát triển gắn liền với vùng đất Tân Uyên anh hùng.
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export default function AboutPage() {
               <span>Phương thức tuyển sinh</span>
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Trường tuyển sinh qua kỳ thi tuyển sinh lớp 10 do Sở GD&ĐT tỉnh Bình Dương tổ chức hàng năm, với 3 môn thi bắt buộc: <strong>Toán, Ngữ văn và Ngoại ngữ</strong>.
+              Trường tuyển sinh qua kỳ thi tuyển sinh lớp 10 do Sở GD&ĐT Tp.Hồ Chí Minh tổ chức hàng năm, với 3 môn thi bắt buộc: <strong>Toán, Ngữ văn và Ngoại ngữ</strong>.
             </p>
           </div>
         </div>

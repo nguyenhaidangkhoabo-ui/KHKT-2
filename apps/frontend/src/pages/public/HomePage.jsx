@@ -37,7 +37,7 @@ export default function HomePage() {
     },
     {
       title: 'Cơ sở vật chất',
-      desc: '29 phòng học đạt chuẩn, khuôn viên cây xanh mát mẻ, phòng thực hành hiện đại phục vụ học tập.',
+      desc: '33 phòng học đạt chuẩn, khuôn viên cây xanh mát mẻ, phòng thực hành hiện đại phục vụ học tập.',
       icon: Building2,
     },
   ]

@@ -515,6 +515,23 @@ export default function StudentListPage() {
 
   const selectedCount = selectedIds.size
 
+  // Nội dung trạng thái rỗng: nêu rõ khi không có học sinh trong lớp đang lọc.
+  const hasActiveFilters =
+    Boolean(filters.keyword.trim()) ||
+    Boolean(filters.status) ||
+    Boolean(filters.academic_status) ||
+    Boolean(filters.gender) ||
+    Boolean(filters.class_id)
+  const selectedClass = filters.class_id && filters.class_id !== '__none__'
+    ? classOptions.find((c) => String(c._id) === String(filters.class_id))
+    : null
+  const emptyTitle = hasActiveFilters ? 'Không có kết quả' : 'Không tìm thấy học sinh nào'
+  const emptyDescription = filters.class_id
+    ? filters.class_id === '__none__'
+      ? 'Không có học sinh nào chưa có lớp.'
+      : `Không có học sinh nào trong lớp ${selectedClass?.name || 'đã chọn'}.`
+    : 'Thử thay đổi bộ lọc hoặc thêm học sinh mới vào hệ thống.'
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 font-sans">
       {/* Tiêu đề */}
@@ -679,8 +696,8 @@ export default function StudentListPage() {
         {!loading && students.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="Không tìm thấy học sinh nào"
-            description="Thử thay đổi bộ lọc hoặc thêm học sinh mới vào hệ thống."
+            title={emptyTitle}
+            description={emptyDescription}
           />
         ) : (
           <>

@@ -423,7 +423,23 @@ export default function StudentListPage() {
     {
       key: 'class_name',
       header: 'Lớp',
-      render: (row) => <Badge color="amber">{row.class_name || 'Chưa có lớp'}</Badge>,
+      render: (row) => {
+        if (row.class_name) return <Badge color="amber">{row.class_name}</Badge>
+        // Lớp chỉ áp dụng cho học sinh đang học; các trạng thái khác hiện gạch ngang trung tính.
+        if (row.academic_status === ACADEMIC_STATUS.ACTIVE) {
+          return <Badge color="amber">Chưa có lớp</Badge>
+        }
+        return (
+          <span
+            className="text-slate-400"
+            title={`Không áp dụng cho trạng thái ${
+              ACADEMIC_STATUS_LABELS[row.academic_status] || row.academic_status
+            }`}
+          >
+            —
+          </span>
+        )
+      },
     },
     {
       key: 'gender',

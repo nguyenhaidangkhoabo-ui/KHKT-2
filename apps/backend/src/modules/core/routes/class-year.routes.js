@@ -8,6 +8,7 @@ router.get('/', authenticate, ClassYearController.getAll);
 router.get('/:id', authenticate, ClassYearController.getById);
 router.post('/', authenticate, ClassYearController.create);
 router.patch('/:id/homeroom', authenticate, ClassYearController.assignHomeroom);
+router.post('/:id/auto-assign-students', authenticate, ClassYearController.autoAssignStudents);
 router.delete('/:id', authenticate, ClassYearController.delete);
 
 export default router;

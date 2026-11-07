@@ -1,7 +1,13 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { CalendarDays, Plus, Trash2, UserCheck, UserMinus, RefreshCw, RotateCcw, Upload, WandSparkles } from 'lucide-react'
-import { classYearService, classService, yearService, staffService, studentClassService } from '../../services'
-import { GRADE_LABELS } from '../../config/constants'
+import { Link } from 'react-router-dom'
+import { CalendarDays, Plus, Trash2, UserCheck, UserMinus, RefreshCw, RotateCcw, Upload, WandSparkles, Eye, Users, UserPlus, ArrowLeft } from 'lucide-react'
+import { classYearService, classService, yearService, staffService, studentClassService, studentService } from '../../services'
+import {
+  GRADE_LABELS,
+  GENDER_LABELS,
+  ACADEMIC_STATUS_LABELS,
+  ACADEMIC_STATUS_COLORS,
+} from '../../config/constants'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import DataTable from '../../components/ui/DataTable'
@@ -9,6 +15,12 @@ import Modal from '../../components/ui/Modal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import EmptyState from '../../components/ui/EmptyState'
 import { toast } from '../../components/ui/Toast'
+
+function formatDate(value) {
+  if (!value) return 'Chưa cập nhật'
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString('vi-VN')
+}
 
 export default function ClassYearPage() {
   const [years, setYears] = useState([])
@@ -43,6 +55,21 @@ export default function ClassYearPage() {
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Danh sách học sinh của một lớp-năm học (modal mắt)
+  const [studentsTarget, setStudentsTarget] = useState(null)
+  const [studentsList, setStudentsList] = useState([])
+  const [studentsLoading, setStudentsLoading] = useState(false)
+  const [studentsError, setStudentsError] = useState('')
+
+  // Hồ sơ tóm tắt của học sinh đang xem ngay trong modal (không rời trang)
+  const [profileStudent, setProfileStudent] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [profileError, setProfileError] = useState('')
+
+  // Xếp học sinh hàng loạt vào các lớp của năm đang chọn
+  const [bulkAssignConfirm, setBulkAssignConfirm] = useState(false)
+  const [bulkAssigning, setBulkAssigning] = useState(false)
 
   // Tải danh mục dùng chung: năm học, lớp gốc, cán bộ
   useEffect(() => {
@@ -337,6 +364,69 @@ export default function ClassYearPage() {
     }
   }
 
+  // Mở modal danh sách học sinh của một lớp-năm học.
+  const openStudents = async (row) => {
+    setStudentsTarget(row)
+    setStudentsList([])
+    setStudentsError('')
+    setProfileStudent(null)
+    setProfileError('')
+    try {
+      setStudentsLoading(true)
+      const res = await studentClassService.students(row._id)
+      const list = Array.isArray(res?.data) ? res.data : []
+      setStudentsList(list)
+    } catch (err) {
+      setStudentsError(err.message || 'Không thể tải danh sách học sinh.')
+    } finally {
+      setStudentsLoading(false)
+    }
+  }
+
+  // Xem hồ sơ tóm tắt của một học sinh ngay trong modal.
+  const openStudentProfile = async (student) => {
+    if (!student?._id) return
+    setProfileStudent(null)
+    setProfileError('')
+    try {
+      setProfileLoading(true)
+      const res = await studentService.getById(student._id)
+      setProfileStudent(res?.data || student)
+    } catch (err) {
+      setProfileError(err.message || 'Không thể tải hồ sơ học sinh.')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const closeStudentsModal = () => {
+    setStudentsTarget(null)
+    setProfileStudent(null)
+    setProfileError('')
+  }
+
+  // Xếp học sinh Đang học chưa có lớp vào lớp ít học sinh nhất cùng khối.
+  const handleBulkAssignStudents = async () => {
+    if (!selectedYearId) return
+    try {
+      setBulkAssigning(true)
+      const res = await classYearService.autoAssignStudents(selectedYearId)
+      const result = res?.data || {}
+      const skipped = result.skipped_no_class ?? 0
+      setBulkAssignConfirm(false)
+      if (skipped > 0) {
+        toast.success(`Đã xếp ${result.assigned ?? 0} học sinh, còn ${result.unassigned ?? 0} chưa xếp (${skipped} không khớp khối).`)
+      } else {
+        toast.success(`Đã xếp ${result.assigned ?? 0} học sinh, còn ${result.unassigned ?? 0} chưa xếp.`)
+      }
+      await loadClassYears()
+    } catch (err) {
+      toast.error(err.message || 'Xếp học sinh hàng loạt thất bại.')
+    } finally {
+      setBulkAssigning(false)
+    }
+  }
+
   const openClassImport = (row) => {
     setClassImportTarget(row)
     fileInputRef.current?.click()
@@ -386,6 +476,13 @@ export default function ClassYearPage() {
       ),
     },
     {
+      key: 'student_count',
+      header: 'Sỉ số',
+      render: (row) => (
+        <Badge color="info">{`${row.student_count ?? 0} học sinh`}</Badge>
+      ),
+    },
+    {
       key: 'year',
       header: 'Năm học',
       render: (row) => (
@@ -424,6 +521,14 @@ export default function ClassYearPage() {
       className: 'text-right',
       render: (row) => (
         <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => openStudents(row)}
+            title="Xem danh sách học sinh"
+            className="p-1.5 rounded-lg text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
           <button
             type="button"
             onClick={() => openClassImport(row)}
@@ -534,6 +639,17 @@ export default function ClassYearPage() {
         <span className="text-[11px] text-slate-500 pb-3">
           Đang hiển thị <strong className="text-slate-800">{filteredRows.length}</strong> lớp
         </span>
+        <div className="ml-auto">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setBulkAssignConfirm(true)}
+            disabled={!selectedYearId || bulkAssigning}
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Xếp học sinh hàng loạt</span>
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -686,6 +802,151 @@ export default function ClassYearPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal danh sách học sinh của lớp */}
+      <Modal
+        isOpen={Boolean(studentsTarget)}
+        onClose={closeStudentsModal}
+        title={
+          profileStudent
+            ? `Hồ sơ: ${profileStudent.full_name}`
+            : `Học sinh lớp ${studentsTarget?.class_id?.name || ''}`
+        }
+        size="md"
+      >
+        <div className="space-y-3">
+          {profileLoading ? (
+            <p className="text-xs text-slate-500">Đang tải hồ sơ học sinh...</p>
+          ) : profileError ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+                {profileError}
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setProfileError('')
+                  setProfileStudent(null)
+                }}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Danh sách lớp</span>
+              </Button>
+            </div>
+          ) : profileStudent ? (
+            <div className="space-y-4">
+              <Button variant="secondary" size="sm" onClick={() => setProfileStudent(null)}>
+                <ArrowLeft className="w-4 h-4" />
+                <span>Danh sách lớp</span>
+              </Button>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
+                <p className="text-sm font-bold text-slate-900">{profileStudent.full_name}</p>
+                <p className="font-mono text-xs text-slate-500">{profileStudent.student_code}</p>
+                <Badge color={ACADEMIC_STATUS_COLORS[profileStudent.academic_status] || 'info'}>
+                  {ACADEMIC_STATUS_LABELS[profileStudent.academic_status] ||
+                    profileStudent.academic_status ||
+                    '—'}
+                </Badge>
+              </div>
+
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                <div>
+                  <dt className="text-slate-400">Ngày sinh</dt>
+                  <dd className="font-semibold text-slate-800">{formatDate(profileStudent.birthdate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Giới tính</dt>
+                  <dd className="font-semibold text-slate-800">
+                    {GENDER_LABELS[profileStudent.gender] || profileStudent.gender || '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Email</dt>
+                  <dd className="font-semibold text-slate-800 break-all">
+                    {profileStudent.email || '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Số điện thoại</dt>
+                  <dd className="font-semibold text-slate-800">{profileStudent.phone || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Năm nhập học</dt>
+                  <dd className="font-semibold text-slate-800">
+                    {profileStudent.enrollment_year || '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Lớp đang xem</dt>
+                  <dd className="font-semibold text-slate-800">
+                    {studentsTarget?.class_id?.name || '—'}
+                  </dd>
+                </div>
+              </dl>
+
+              <Link
+                to={`/admin/students/${profileStudent._id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+              >
+                <span>Mở trang hồ sơ đầy đủ</span>
+              </Link>
+            </div>
+          ) : studentsLoading ? (
+            <p className="text-xs text-slate-500">Đang tải danh sách học sinh...</p>
+          ) : studentsError ? (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+              {studentsError}
+            </div>
+          ) : studentsList.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="Lớp chưa có học sinh"
+              description="Lớp-năm học này chưa có học sinh nào."
+            />
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {studentsList.map((item) => {
+                const s = item.student_id && typeof item.student_id === 'object' ? item.student_id : item
+                return (
+                  <li key={s._id || item._id} className="py-2 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openStudentProfile(s)}
+                      className="flex-1 text-left text-xs cursor-pointer"
+                    >
+                      <p className="font-semibold text-slate-800">{s.full_name}</p>
+                      <p className="font-mono text-slate-500">{s.student_code}</p>
+                    </button>
+                    {s._id && (
+                      <button
+                        type="button"
+                        onClick={() => openStudentProfile(s)}
+                        title="Xem hồ sơ"
+                        className="p-1.5 rounded-lg text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </Modal>
+
+      {/* Xác nhận xếp học sinh hàng loạt */}
+      <ConfirmDialog
+        isOpen={bulkAssignConfirm}
+        onClose={() => setBulkAssignConfirm(false)}
+        onConfirm={handleBulkAssignStudents}
+        loading={bulkAssigning}
+        title="Xếp học sinh hàng loạt"
+        message="Chỉ xếp học sinh Đang học chưa có lớp vào lớp ít học sinh nhất cùng khối. Tiếp tục?"
+        confirmText="Xếp học sinh"
+      />
 
       {/* Xác nhận xóa */}
       <ConfirmDialog

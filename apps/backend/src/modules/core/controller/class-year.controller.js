@@ -45,4 +45,11 @@ export class ClassYearController {
       return res.status(HttpStatus.OK).json({ success: true, message: 'Xóa lớp-năm học thành công' });
     } catch (err) { next(err); }
   }
+
+  static async autoAssignStudents(req, res, next) {
+    try {
+      const result = await ClassYearService.autoAssignStudents(req.params.id);
+      return res.status(HttpStatus.OK).json({ success: true, data: result });
+    } catch (err) { next(err); }
+  }
 }

@@ -35,6 +35,11 @@ export const classYearService = {
   assignHomeroom: async (id, payload) => {
     return await httpClient.patch(`/core/class-years/${id}/homeroom`, payload)
   },
+
+  // Xếp học sinh hàng loạt vào các lớp của năm học (lớp ít học sinh nhất cùng khối).
+  autoAssignStudents: async (academicYearId) => {
+    return await httpClient.post(`/core/class-years/${academicYearId}/auto-assign-students`)
+  },
 }
 
 export default classYearService

@@ -19,6 +19,11 @@ export const studentClassService = {
     return await httpClient.get(`/core/students/${studentId}/academic-history`)
   },
 
+  // Học sinh của một lớp-năm học — khớp backend: GET /core/students/class-academic-year/:id
+  students: async (classAcademicYearId) => {
+    return await httpClient.get(`/core/students/class-academic-year/${classAcademicYearId}`)
+  },
+
   // Import danh sách học sinh vào lớp từ file Excel (multipart/form-data, trường 'file')
   importExcel: async (classAcademicYearId, formData) => {
     return await httpClient.post(

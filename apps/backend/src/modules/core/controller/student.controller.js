@@ -108,7 +108,6 @@ export class StudentController {
             })()
           : '',
         'Giới tính': s.gender,
-        'Lớp': s.class_name || '',
         email: s.email,
         'SĐT học sinh': s.phone || '',
         'SĐT cha': s.father_phone || '',
